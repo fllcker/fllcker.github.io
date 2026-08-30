@@ -1,0 +1,1060 @@
+/* ============================================================================
+ *  ДОМ-ИНДЕКС — система
+ *
+ *  Одно правило держит всю страницу: волосяная линейка в 1px.
+ *  Нет карточек, нет скруглений, нет теней, нет второго цвета.
+ *  Иерархию несёт кегль и яркость — больше ничего.
+ * ========================================================================= */
+
+:root {
+  /* Основа. Чистый чёрный — дом не разбавляет. */
+  --ground: #000000;
+
+  /* Чернила. Всё, что читается, держит контраст ≥ 4.5:1 к основе. */
+  --ink: #ffffff;
+  --ink-2: #8a8a8a; /* 5.7:1 — подписи, метаданные */
+  --ink-dim: #9a9a9a; /* 6.9:1 — приглушённый сосед активной строки */
+
+  /* Линейки. Единственное средство деления. */
+  --rule: #232323;
+  --rule-faint: #141414; /* вертикальная сетка листа */
+  --rule-strong: #3a3a3a; /* линейка активной строки */
+  --rule-lit: rgba(255, 255, 255, 0.5); /* свет, идущий за курсором */
+
+  --sans: 'Geist', system-ui, sans-serif;
+  --mono: 'Geist Mono', ui-monospace, monospace;
+
+  /* Лист. Ширина и поля, к которым привязана вертикальная сетка. */
+  --sheet: 1560px;
+  --gutter: clamp(20px, 4vw, 64px);
+  --bar: 52px;
+
+  /* Метка. Мономелкий капслок с трекингом — лейбл состава. */
+  --label-size: 0.6875rem;
+  --label-track: 0.16em;
+
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  color-scheme: dark;
+}
+
+/* --- сброс ---------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Якорь не должен уезжать под фиксированную планку. */
+[id] {
+  scroll-margin-top: calc(var(--bar) + 1.5rem);
+}
+
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  font-synthesis-weight: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* Здесь намеренно нет overflow-x: hidden. Он не лечит переполнение,
+   * а прячет его: на телефоне читатель молча теряет часть содержимого,
+   * а любая проверка ширины возвращает «чисто» по построению. */
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul,
+ol {
+  list-style: none;
+  padding: 0;
+}
+
+/* --- поверхности браузера ------------------------------------------------ */
+/* То, что мы не рисовали, всё равно должно принадлежать этой системе. */
+
+::selection {
+  background: var(--ink);
+  color: var(--ground);
+}
+
+:focus-visible {
+  outline: 1px solid var(--ink);
+  outline-offset: 5px;
+}
+
+html {
+  scrollbar-color: #2e2e2e var(--ground);
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--ground);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2e2e2e;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #454545;
+}
+
+/* ==========================================================================
+ *  Лист и сетка
+ * ======================================================================= */
+
+.sheet {
+  max-width: var(--sheet);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* Вертикальные линейки листа: страница читается как разлинованная бумага. */
+.gridlines {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.gridlines__inner {
+  height: 100%;
+  max-width: var(--sheet);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+  background-image: linear-gradient(90deg, var(--rule-faint) 1px, transparent 1px);
+  background-size: calc(100% / 6) 100%;
+  background-origin: content-box;
+  background-clip: content-box;
+  background-repeat: repeat-x;
+}
+
+@media (max-width: 700px) {
+  .gridlines__inner {
+    background-size: calc(100% / 2) 100%;
+  }
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+}
+
+/* ==========================================================================
+ *  Линейка — сигнатура системы
+ *  Свет идёт по линии за курсором: лист живой, а не напечатанный.
+ * ======================================================================= */
+
+.rule {
+  position: relative;
+  width: 100%;
+  height: 1px;
+  background: var(--rule);
+  border: 0;
+}
+
+.rule::after {
+  content: '';
+  position: absolute;
+  inset: -1px 0;
+  background: radial-gradient(
+    360px 2px at var(--mx, 50%) 50%,
+    var(--rule-lit),
+    transparent 70%
+  );
+  opacity: var(--g, 0);
+  transition: opacity 0.3s linear;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce), (hover: none) {
+  .rule::after {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+ *  Типографика
+ * ======================================================================= */
+
+.label {
+  font-family: var(--mono);
+  font-size: var(--label-size);
+  font-weight: 400;
+  letter-spacing: var(--label-track);
+  text-transform: uppercase;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.label--ink {
+  color: var(--ink);
+}
+
+.mono {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.prose p {
+  max-width: 68ch;
+  color: var(--ink-dim);
+}
+
+.prose p + p {
+  margin-top: 1.1em;
+}
+
+.prose strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* ==========================================================================
+ *  Верхняя планка
+ * ======================================================================= */
+
+.bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: var(--ground);
+}
+
+.bar__inner {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  height: var(--bar);
+  max-width: var(--sheet);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.bar__mark {
+  font-family: var(--mono);
+  font-size: var(--label-size);
+  letter-spacing: var(--label-track);
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.bar__spacer {
+  flex: 1;
+}
+
+.bar__nav {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+/* Переключатель языка: два состояния, никакой иконки-глобуса. */
+.lang {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.lang__opt {
+  font-family: var(--mono);
+  font-size: var(--label-size);
+  letter-spacing: var(--label-track);
+  text-transform: uppercase;
+  color: var(--ink-2);
+  transition: color 0.2s var(--ease);
+}
+
+.lang__opt[aria-pressed='true'] {
+  color: var(--ink);
+}
+
+.lang__opt:hover {
+  color: var(--ink);
+}
+
+/* Был --rule-strong: около 1.5:1 на чёрном, внутри основного двуязычного
+ * контроля. --ink-2 даёт 6.1:1 и совпадает с неактивным вариантом языка. */
+.lang__sep {
+  color: var(--ink-2);
+  font-family: var(--mono);
+  font-size: var(--label-size);
+}
+
+/* Ссылка-действие: подчёркивание рисуется линейкой, а не текст-декорацией. */
+.act {
+  position: relative;
+  font-family: var(--mono);
+  font-size: var(--label-size);
+  letter-spacing: var(--label-track);
+  text-transform: uppercase;
+  color: var(--ink);
+  padding-bottom: 3px;
+}
+
+.act::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--ink);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.45s var(--ease);
+}
+
+.act:hover::after,
+.act:focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* ==========================================================================
+ *  Первый экран
+ * ======================================================================= */
+
+.hero {
+  padding-top: var(--bar);
+}
+
+.hero__body {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: min(78svh, 760px);
+  padding-block: clamp(3rem, 9vh, 7rem) 0;
+}
+
+/* На телефоне пустота над именем — не композиция, а потерянный первый экран:
+ * это контекст, который PRODUCT.md называет основным. Имя и строка состава
+ * обязаны попасть в верхние две трети экрана. */
+@media (max-width: 620px) {
+  .hero__body {
+    min-height: min(40svh, 400px);
+    padding-block: clamp(1.25rem, 4vh, 2.5rem) 0;
+  }
+}
+
+/* Имя дома набрано во всю ширину листа — кегль и есть заявление.
+ * 31vw подобрано так, чтобы слово доходило до правого поля и не переполняло
+ * его ни на 320px, ни на широком мониторе, где ширину держит потолок в 31rem. */
+.hero__name {
+  font-size: clamp(3.5rem, 31vw, 31rem);
+  font-weight: 600;
+  line-height: 0.78;
+  letter-spacing: -0.04em;
+  margin-bottom: clamp(0.75rem, 2vh, 1.5rem);
+}
+
+/* Строка состава — как жаккардовый лейбл на изнанке: слева из чего сделано,
+ * справа статус. На узком экране распадается на две строки, не ломаясь. */
+.composition {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem 2rem;
+  padding-block: 1.1rem;
+}
+
+.composition__set {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6rem 0.9rem;
+}
+
+.composition__status {
+  gap: 0.6rem 1.5rem;
+}
+
+/* Разделитель уезжает вместе со своим словом, поэтому при переносе
+ * строка заканчивается слэшем, а не начинается с него. */
+.composition__item {
+  white-space: nowrap;
+}
+
+.composition__sep {
+  color: var(--rule-strong);
+  padding-left: 0.9rem;
+}
+
+/* ==========================================================================
+ *  Секции
+ * ======================================================================= */
+
+.section {
+  padding-block: clamp(3.5rem, 9vh, 8rem) 0;
+}
+
+.section__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2rem;
+  padding-bottom: clamp(1.75rem, 4vh, 3rem);
+}
+
+.section__title {
+  font-size: clamp(1.75rem, 4.5vw, 3.25rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+/* На узком экране заголовок и приписка не делят строку: русская приписка
+ * длиннее английской и жмётся к заголовку вплотную. */
+@media (max-width: 620px) {
+  .section__head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+}
+
+/* ==========================================================================
+ *  Индекс коллекции
+ *  Строка светлеет под курсором, соседи приглушаются: состояние чтения.
+ * ======================================================================= */
+
+.index__list:hover .index__row:not(:hover) .index__name,
+.index__list:focus-within .index__row:not(:focus-within) .index__name {
+  color: var(--ink-dim);
+}
+
+.index__row {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr auto;
+  align-items: baseline;
+  gap: 1.5rem;
+  padding-block: clamp(0.9rem, 2.2vh, 1.4rem);
+  transition: color 0.3s var(--ease);
+}
+
+.index__name {
+  font-size: clamp(1.125rem, 2.2vw, 1.5rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  transition: color 0.3s var(--ease);
+}
+
+.index__meta {
+  color: var(--ink-2);
+}
+
+/* ==========================================================================
+ *  Работа — разворот лука
+ * ======================================================================= */
+
+.work {
+  display: grid;
+  grid-template-columns: 7fr 5fr;
+  gap: clamp(2rem, 5vw, 5rem);
+  padding-block: clamp(2.5rem, 6vh, 5rem);
+  align-items: start;
+}
+
+/* Грид-элемент по умолчанию не уже своего содержимого, поэтому схема
+ * с её min-width распирала бы колонку и весь лист. Обнуляем минимум —
+ * прокрутка тогда живёт внутри .schematic-wrap, как и задумано. */
+.work > *,
+.block > * {
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .work {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+}
+
+.work__code {
+  display: flex;
+  gap: 1.25rem;
+  padding-bottom: clamp(1rem, 2.5vh, 1.75rem);
+}
+
+.work__name {
+  font-size: clamp(2.75rem, 8vw, 6.5rem);
+  font-weight: 600;
+  line-height: 0.88;
+  letter-spacing: -0.04em;
+  display: inline-block;
+}
+
+.work__summary {
+  margin-top: 1.25rem;
+  font-size: clamp(1.0625rem, 1.5vw, 1.375rem);
+  line-height: 1.45;
+  max-width: 38ch;
+  color: var(--ink);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  /* Не рвать по дефису внутри терминов вроде at-least-once. */
+  text-wrap: pretty;
+  hyphens: none;
+}
+
+.work__lede {
+  margin-top: 1.5rem;
+  color: var(--ink-dim);
+  max-width: 56ch;
+}
+
+.work__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.5rem 2.5rem;
+  margin-top: clamp(1.75rem, 4vh, 2.75rem);
+}
+
+/* Триада метаданных: роль / стек / период. Один порядок, одно место, всегда. */
+.triad {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
+  gap: 1.25rem 2rem;
+  padding-block: 1.25rem;
+}
+
+.triad__term {
+  color: var(--ink-2);
+}
+
+.triad__value {
+  margin-top: 0.5rem;
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+/* Имя работы: линейка выезжает из-под него на наведение всей строки. */
+.work__link .work__name {
+  position: relative;
+}
+
+.work__link .work__name::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0.08em;
+  height: 2px;
+  background: var(--ink);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.55s var(--ease);
+}
+
+.work__link:hover .work__name::after,
+.work__link:focus-visible .work__name::after {
+  transform: scaleX(1);
+}
+
+/* ==========================================================================
+ *  Схема архитектуры
+ *  Рисуется той же волосяной графикой — доказательство, а не иллюстрация.
+ * ======================================================================= */
+
+/* Схема прокручивается внутри себя, а не сжимается до нечитаемого кегля.
+ * Ширина листа при этом не ломается: переполнение живёт в этом контейнере. */
+.schematic-wrap {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding-bottom: 0.5rem;
+}
+
+.schematic {
+  width: 100%;
+  min-width: 460px;
+  height: auto;
+  overflow: visible;
+}
+
+.schematic__box {
+  fill: none;
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.schematic__box--emphasis {
+  stroke: var(--ink);
+}
+
+/* Подписи выбивают линию за собой, чтобы связь не перечёркивала текст. */
+.schematic text {
+  paint-order: stroke;
+  stroke: var(--ground);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+.schematic__label {
+  font-family: var(--mono);
+  font-size: 7.5px;
+  letter-spacing: 0.05em;
+  fill: var(--ink);
+  text-transform: uppercase;
+}
+
+.schematic__note {
+  font-family: var(--mono);
+  font-size: 6.5px;
+  letter-spacing: 0.03em;
+  fill: var(--ink-2);
+}
+
+.schematic__edge {
+  fill: none;
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.schematic__edge--async {
+  stroke-dasharray: 3 3;
+}
+
+.schematic__edge-label {
+  font-family: var(--mono);
+  font-size: 6px;
+  letter-spacing: 0.05em;
+  fill: var(--ink-2);
+  text-transform: uppercase;
+}
+
+.schematic__cap {
+  margin-top: 1.25rem;
+  color: var(--ink-2);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  max-width: 46ch;
+}
+
+/* ==========================================================================
+ *  Стек — ступень рисуется кеглем и подписывается словом.
+ *
+ *  Одна шкала, три ступени. Кегль и подпись обязаны означать одно и то же:
+ *  если бы размеров было больше, чем ступеней, читатель видел бы разницу,
+ *  которую подпись не объясняет, и шкала перестала бы быть проверяемой.
+ * ======================================================================= */
+
+/* Легенда шкалы. Черта повторяет убывание кегля в списке — определение и
+ * величина заявлены в одном месте, до первой строки списка. */
+.tiers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1.25rem, 3vw, 2.5rem);
+  padding-bottom: clamp(1.5rem, 3.5vh, 2.5rem);
+}
+
+.tiers__item {
+  align-content: start;
+}
+
+.tiers__item::before {
+  content: '';
+  display: block;
+  width: var(--tier-w);
+  max-width: 100%;
+  height: 1px;
+  margin-bottom: 0.7rem;
+  background: var(--ink);
+}
+
+.tiers__item[data-tier='core'] {
+  --tier-w: 7rem;
+}
+
+.tiers__item[data-tier='working'] {
+  --tier-w: 4.2rem;
+}
+
+.tiers__item[data-tier='applied'] {
+  --tier-w: 2.1rem;
+}
+
+.tiers__gloss {
+  margin-top: 0.4rem;
+  max-width: 32ch;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+.stack__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: baseline;
+  gap: 2rem;
+  padding-block: clamp(0.5rem, 1.5vh, 1rem);
+  transition: color 0.3s var(--ease);
+}
+
+.stack__list:hover .stack__row:not(:hover) {
+  color: var(--ink-dim);
+}
+
+.stack__name {
+  /* Глубину видно, не читая подписи: ядро — крупно, прикладное — мелко. */
+  font-size: calc(0.9rem + var(--mag) * clamp(0.35rem, 1.15vw, 0.78rem));
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.stack__row[data-tier='core'] {
+  --mag: 5;
+}
+
+.stack__row[data-tier='working'] {
+  --mag: 3.2;
+}
+
+.stack__row[data-tier='applied'] {
+  --mag: 1.8;
+}
+
+/* Повтор одного слова подряд собирает ступень в группу — заголовки групп
+ * не нужны, а подпись остаётся у каждой строки, где её и читают. */
+.stack__tier {
+  flex-shrink: 0;
+  text-align: right;
+  transition: color 0.3s var(--ease);
+}
+
+.stack__row:hover .stack__tier {
+  color: var(--ink);
+}
+
+.stack__note {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+  .tiers {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .tiers__gloss {
+    max-width: 52ch;
+  }
+}
+
+/* На узком экране имя занимает свою строку: втроём они не помещаются,
+ * а сжимать имя ради подписей — терять величину, которая и есть шкала. */
+@media (max-width: 720px) {
+  .stack__row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.35rem 1rem;
+  }
+
+  .stack__name {
+    grid-column: 1 / -1;
+  }
+
+  .stack__tier {
+    text-align: left;
+  }
+}
+
+/* ==========================================================================
+ *  Контакты
+ * ======================================================================= */
+
+.contact__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2rem;
+  padding-block: clamp(1rem, 2.5vh, 1.6rem);
+}
+
+.contact__value {
+  font-size: clamp(1.375rem, 4vw, 2.75rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  position: relative;
+  display: inline-block;
+}
+
+.contact__value::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0.1em;
+  height: 1px;
+  background: var(--ink);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s var(--ease);
+}
+
+a:hover .contact__value::after,
+a:focus-visible .contact__value::after {
+  transform: scaleX(1);
+}
+
+/* ==========================================================================
+ *  Подвал
+ * ======================================================================= */
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+  justify-content: space-between;
+  padding-block: 2rem clamp(2rem, 5vh, 4rem);
+}
+
+/* ==========================================================================
+ *  Страница работы
+ * ======================================================================= */
+
+.spread__head {
+  padding-top: calc(var(--bar) + clamp(2.5rem, 8vh, 6rem));
+  padding-bottom: clamp(1.5rem, 4vh, 3rem);
+}
+
+.spread__name {
+  font-size: clamp(3.5rem, 15vw, 13rem);
+  font-weight: 600;
+  line-height: 0.82;
+  letter-spacing: -0.045em;
+}
+
+.spread__lede {
+  margin-top: clamp(1.5rem, 4vh, 2.5rem);
+  font-size: clamp(1.125rem, 1.9vw, 1.625rem);
+  line-height: 1.4;
+  letter-spacing: -0.015em;
+  max-width: 42ch;
+}
+
+.block {
+  display: grid;
+  grid-template-columns: 3fr 9fr;
+  gap: clamp(1.5rem, 4vw, 4rem);
+  padding-block: clamp(2.5rem, 6vh, 4.5rem);
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .block {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+.block__side {
+  position: sticky;
+  top: calc(var(--bar) + 1.5rem);
+}
+
+.block__heading {
+  font-size: 1.0625rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.block__note {
+  margin-top: 0.85rem;
+  max-width: 22ch;
+}
+
+@media (max-width: 860px) {
+  .block__side {
+    position: static;
+  }
+}
+
+.points__item {
+  padding-block: clamp(1rem, 2.5vh, 1.5rem);
+}
+
+.points__term {
+  font-size: clamp(1.125rem, 1.8vw, 1.5rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  max-width: 30ch;
+}
+
+.points__body {
+  margin-top: 0.75rem;
+  color: var(--ink-dim);
+  max-width: 64ch;
+}
+
+.figures__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2rem;
+  padding-block: clamp(0.75rem, 2vh, 1.25rem);
+}
+
+.figures__value {
+  font-size: clamp(2rem, 4.5vw, 3.5rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.figures__label {
+  text-align: right;
+  max-width: 28ch;
+}
+
+@media (max-width: 620px) {
+  .figures__row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+
+  .figures__label {
+    text-align: left;
+  }
+}
+
+.spread__next {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2rem;
+  padding-block: clamp(2rem, 5vh, 3.5rem);
+}
+
+.spread__next-name {
+  font-size: clamp(2rem, 6vw, 4.5rem);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  position: relative;
+  display: inline-block;
+}
+
+.spread__next-name::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0.08em;
+  height: 2px;
+  background: var(--ink);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.55s var(--ease);
+}
+
+a:hover .spread__next-name::after,
+a:focus-visible .spread__next-name::after {
+  transform: scaleX(1);
+}
+
+/* ==========================================================================
+ *  Не найдено
+ * ======================================================================= */
+
+.missing {
+  min-height: 70svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.missing__title {
+  font-size: clamp(2.5rem, 9vw, 7rem);
+  font-weight: 600;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+}
+
+/* ==========================================================================
+ *  Движение — один поставленный момент: лист расчерчивается.
+ *  Значения по умолчанию видимые; анимация только добавляется сверху.
+ * ======================================================================= */
+
+@media (prefers-reduced-motion: no-preference) {
+  .draw {
+    animation: draw 1s var(--ease) backwards;
+    animation-delay: calc(var(--i, 0) * 60ms);
+    transform-origin: left;
+  }
+
+  .rise {
+    animation: rise 0.9s var(--ease) backwards;
+    animation-delay: calc(var(--i, 0) * 60ms + 90ms);
+  }
+
+  @keyframes draw {
+    from {
+      transform: scaleX(0);
+    }
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+}
+
+/* Скрытая надпись для скринридеров — без визуального следа. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
