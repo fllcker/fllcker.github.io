@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
-import { contacts, featuredCount, identity, intro, projects, stack, tiers, ui } from '../content';
+import { featuredCount, identity, intro, languages, projects, tiers, ui } from '../content';
 import { useLocale } from '../i18n';
+import { ContactSign } from '../components/ContactSign';
 import { Rule } from '../components/Rule';
 import { Schematic } from '../components/Schematic';
+import { StackMap } from '../components/StackMap';
 import { Triad } from '../components/Triad';
 
 export function Index() {
@@ -120,6 +122,32 @@ export function Index() {
           </div>
         </div>
         <Rule />
+
+        {/* Языки живут внутри «О себе», а не отдельной секцией: два пункта
+            не наполняют раздел, а в оглавлении появился бы пункт, за которым
+            стоят две строки. Черта под каждым — тот же приём, что у ступеней
+            стека, поэтому новая грамматика на странице не заводится. */}
+        <div className="sheet">
+          {/* Метка даёт блоку якорь для беглого взгляда: языки — то, что
+              ищут прицельно, а заголовка секции у них теперь нет. */}
+          <p className="label langs__head">{l(ui.languages)}</p>
+          <dl className="langs">
+            {languages.map((language) => (
+              <div
+                className="langs__item"
+                key={language.name.en}
+                style={{ '--reach': language.reach } as React.CSSProperties}
+              >
+                <dt className="langs__name">
+                  {l(language.name)}
+                  <span className="label langs__level">{l(language.level)}</span>
+                </dt>
+                {language.gloss ? <dd className="langs__gloss">{l(language.gloss)}</dd> : null}
+              </div>
+            ))}
+          </dl>
+        </div>
+        <Rule />
       </section>
 
       {/* ---- работы ---- */}
@@ -216,7 +244,7 @@ export function Index() {
         ) : null}
       </section>
 
-      {/* ---- стек: ступень рисуется кеглем и подписывается словом ---- */}
+      {/* ---- стек: ступень рисуется площадью клетки, кеглем и подписью ---- */}
       <section className="section" id="stack">
         <div className="sheet">
           <div className="section__head">
@@ -224,7 +252,7 @@ export function Index() {
             <span className="label">{l(ui.stackScale)}</span>
           </div>
 
-          {/* Легенда стоит до списка, а не в подвале: ступень без определения —
+          {/* Легенда стоит до карты, а не в подвале: ступень без определения —
             * ещё одна непроверяемая оценка, с определением её можно спросить. */}
           <dl className="tiers">
             {tiers.map((tier) => (
@@ -236,8 +264,20 @@ export function Index() {
           </dl>
         </div>
         <Rule />
-        {/* Порядок списка задаётся ступенью, а не порядком записей в content:
-          * новая технология встаёт на своё место сама. */}
+        {/* Карта стека: площадь клетки — ступень. Раскладка считается в
+          * StackMap.tsx, порядок и группировка выходят из весов сами. */}
+        <div className="sheet">
+          <StackMap />
+        </div>
+        <Rule />
+
+        {/* ---- ОТКАТ: прежний вертикальный список стека -------------------
+         * Замена на карту обратима одним движением: закомментировать <StackMap />
+         * выше и раскомментировать блок ниже. Стили .stack__row остались в
+         * styles.css нетронутыми, поэтому правок в CSS для отката не нужно.
+         * Единственное, что придётся вернуть руками, — `stack` в импорте из
+         * ../content: сейчас его читает StackMap, и здесь он не нужен.
+
         <ul className="stack__list">
           {tiers.flatMap((tier) =>
             stack
@@ -256,10 +296,12 @@ export function Index() {
               )),
           )}
         </ul>
+
+         * ---------------------------------------------------------------- */}
       </section>
 
       {/* ---- контакты ---- */}
-      <section className="section" id="contact">
+      <section className="section contact" id="contact">
         <div className="sheet">
           <div className="section__head">
             <h2 className="section__title">{l(ui.contact)}</h2>
@@ -267,21 +309,8 @@ export function Index() {
           </div>
         </div>
         <Rule />
-        <ul>
-          {contacts.map((contact) => (
-            <li key={contact.href}>
-              <a href={contact.href} target="_blank" rel="noreferrer noopener">
-                <div className="sheet">
-                  <div className="contact__row">
-                    <span className="contact__value">{contact.value}</span>
-                    <span className="label">{contact.label} ↗</span>
-                  </div>
-                </div>
-              </a>
-              <Rule />
-            </li>
-          ))}
-        </ul>
+        <ContactSign />
+        <Rule />
       </section>
 
       <footer className="sheet">

@@ -675,6 +675,10 @@ html {
 /* ==========================================================================
  *  Стек — ступень рисуется кеглем и подписывается словом.
  *
+ *  ⚠  СПИСОК ЗАМЕНЁН КАРТОЙ СТЕКА (.stack-map ниже). Разметка списка в
+ *     Index.tsx закомментирована, а эти правила оставлены живыми: снять
+ *     комментарий в разметке — и старый вид вернётся без правок в CSS.
+ *
  *  Одна шкала, три ступени. Кегль и подпись обязаны означать одно и то же:
  *  если бы размеров было больше, чем ступеней, читатель видел бы разницу,
  *  которую подпись не объясняет, и шкала перестала бы быть проверяемой.
@@ -802,31 +806,255 @@ html {
 }
 
 /* ==========================================================================
- *  Контакты
+ *  Карта стека — площадь клетки есть ступень.
+ *
+ *  Тот же приём, что в карте диска WinDirStat, только без цвета: цветом там
+ *  кодируется тип файла, здесь кодировать нечего — ступень уже сказана
+ *  площадью, кеглем и яркостью заливки. Второй цвет ничего бы не добавил,
+ *  а систему страницы сломал бы.
+ *
+ *  Раскладку считает `StackMap.tsx` и отдаёт в процентах, поэтому здесь нет
+ *  ни сетки, ни колонок: CSS отвечает только за поверхность клетки.
  * ======================================================================= */
 
-.contact__row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 2rem;
-  padding-block: clamp(1rem, 2.5vh, 1.6rem);
+.stack-map__frame {
+  margin: 0;
+  padding-block: clamp(1.5rem, 4vh, 2.75rem);
 }
 
-.contact__value {
-  font-size: clamp(1.375rem, 4vw, 2.75rem);
+.stack-map {
+  position: relative;
+  width: 100%;
+  background: var(--ground);
+  /* Пропорции приходят из компонента: под них пересчитана и раскладка. */
+  border-top: 1px solid var(--rule);
+  border-left: 1px solid var(--rule);
+}
+
+.stack-map__cell {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.5rem;
+  overflow: hidden;
+  padding: clamp(0.5rem, 1.1vw, 0.95rem);
+  /* Соседние клетки делят один волосок: правую и нижнюю грань рисует левый
+   * верхний сосед, поэтому линия нигде не удваивается. */
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  background: var(--fill);
+  color: var(--ink);
+  container-type: size;
+  transition:
+    background-color 0.35s var(--ease),
+    color 0.3s var(--ease);
+}
+
+/* Заливка — третья запись той же ступени, после площади и кегля. Она едва
+ * различима поодиночке и хорошо читается на контрасте соседних клеток.
+ *
+ * Цвета непрозрачные, а не rgba поверх основы: вертикальные линейки листа
+ * (.gridlines) висят фоном под всей страницей и просвечивали бы сквозь
+ * полупрозрачную клетку — карта разлиновывалась бы чужой сеткой поверх
+ * собственной. Значения — те же доли белого, сведённые с чёрным заранее. */
+.stack-map__cell[data-tier='core'] {
+  --fill: #0e0e0e; /* белый 5.5% на основе */
+  --mag: 5;
+}
+
+.stack-map__cell[data-tier='working'] {
+  --fill: #080808; /* белый 3% */
+  --mag: 3.2;
+}
+
+.stack-map__cell[data-tier='applied'] {
+  --fill: #030303; /* белый 1.2% */
+  --mag: 1.8;
+}
+
+/* Тот же закон, что у списка работ: наведение гасит соседей, а не красит
+ * выбранное. Внимание переносится, ничего не подсвечивается. */
+.stack-map:hover .stack-map__cell:not(:hover) {
+  color: var(--ink-dim);
+}
+
+.stack-map__cell:hover {
+  background: #1a1a1a;
+}
+
+.stack-map__name {
+  /* Кегль задан ступенью — как в старом списке. Три границы не дают имени
+   * вылезти из тесной клетки: по высоте, по ширине и по длине самого слова
+   * (--fit = 1/длина приходит из компонента). Величина уступает
+   * читаемости, но не наоборот. */
+  font-size: min(
+    calc(0.8rem + var(--mag) * clamp(0.16rem, 0.42vw, 0.4rem)),
+    26cqh,
+    24cqw,
+    calc((100cqw - 2rem) * var(--fit, 0.1) * 1.3)
+  );
   font-weight: 500;
+  line-height: 1.05;
   letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+}
+
+.stack-map__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.stack-map__tier,
+.stack-map__note {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stack-map__tier {
+  color: var(--ink);
+  opacity: 0.55;
+}
+
+.stack-map__note {
+  /* Примечание — самая мелкая запись клетки: в тесноте оно уходит первым. */
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  text-transform: none;
+}
+
+/* Клетка, где примечание уже не поместилось: ступень осталась одна и обязана
+ * встать целиком. Трекинг у неё съедает четверть строки — его и снимаем,
+ * потому что «Прикладное» с многоточием не отвечает ни на один вопрос. */
+.stack-map__cell[data-tight] .stack-map__tier {
+  font-size: 0.625rem;
+  letter-spacing: 0.04em;
+}
+
+.stack-map__cap {
+  display: block;
+  margin-top: 0.9rem;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+/* На узкой карте клетки становятся тесными: примечание отдаёт место имени. */
+@media (max-width: 760px) {
+  .stack-map__note {
+    display: none;
+  }
+
+  .stack-map__cell {
+    padding: 0.5rem;
+  }
+}
+
+/* ==========================================================================
+ *  Языки
+ *
+ *  Та же графика, что у ступеней стека: величину несёт длина волоска, а не
+ *  цифра и не полоска прогресса. Ширина берётся из данных (`--reach`, 0..1),
+ *  поэтому добавленный язык рисуется сам, без правки правил.
+ * ======================================================================= */
+
+.langs__head {
+  padding-top: clamp(1.75rem, 4vh, 2.75rem);
+}
+
+.langs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1.25rem, 3vw, 2.5rem);
+  padding-block: clamp(1.1rem, 2.5vh, 1.6rem) clamp(1.75rem, 4vh, 2.75rem);
+  max-width: 62rem;
+}
+
+.langs__item {
+  align-content: start;
+}
+
+.langs__item::before {
+  content: '';
+  display: block;
+  width: calc(var(--reach, 1) * 7rem);
+  max-width: 100%;
+  height: 1px;
+  margin-bottom: 0.7rem;
+  background: var(--ink);
+}
+
+.langs__name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem 0.75rem;
+  font-size: clamp(1.125rem, 2.2vw, 1.5rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+/* Отметка стоит рядом с именем, а не под ним: моно-капс против крупного
+ * начертания читается как другой регистр записи, а не как вторая строка. */
+.langs__level {
+  transform: translateY(-0.1em);
+}
+
+.langs__gloss {
+  margin-top: 0.4rem;
+  max-width: 34ch;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+/* На узком экране два языка встают друг под друга: определение длиннее
+ * половины телефонной ширины и в две колонки рвётся в столбик по слову. */
+@media (max-width: 620px) {
+  .langs {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.75rem;
+  }
+}
+
+/* ==========================================================================
+ *  Связаться — подпись
+ *
+ *  Имя открывает лист во всю ширину; адрес его во всю ширину закрывает.
+ *  Кегль приезжает из ContactSign: он измерен по строке, а не выведен из vw,
+ *  поэтому адрес любой длины садится по ширине листа. Значение ниже — только
+ *  основание, на котором блок стоит до того, как отработает скрипт.
+ * ======================================================================= */
+
+.sign {
+  display: block;
+  padding-block: clamp(1.5rem, 4vh, 3rem) clamp(1.25rem, 3vh, 2.25rem);
+}
+
+.sign__value {
   position: relative;
   display: inline-block;
+  max-width: 100%;
+  font-size: clamp(1.5rem, 9vw, 8rem);
+  font-weight: 600;
+  line-height: 0.82;
+  letter-spacing: -0.045em;
+  white-space: nowrap;
+  transition: color 0.3s var(--ease);
 }
 
-.contact__value::after {
+/* Подчёркивание — то же, что у работ: волосок, выезжающий слева. Под словом
+ * в двести пикселей он и должен остаться волоском; единица деления на этой
+ * странице одна, и крупный кегль её не отменяет. */
+.sign__value::after {
   content: '';
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0.1em;
+  bottom: -0.06em;
   height: 1px;
   background: var(--ink);
   transform: scaleX(0);
@@ -834,9 +1062,38 @@ html {
   transition: transform 0.5s var(--ease);
 }
 
-a:hover .contact__value::after,
-a:focus-visible .contact__value::after {
+.sign:hover .sign__value::after,
+.sign:focus-visible .sign__value::after {
   transform: scaleX(1);
+}
+
+/* Остальные каналы — зеркало строки состава под именем: тот же моно-капс,
+ * тот же слэш-разделитель, та же логика переноса. */
+.sign__rest {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6rem 0;
+  padding-block: clamp(0.9rem, 2.2vh, 1.4rem);
+}
+
+.sign__item {
+  white-space: nowrap;
+}
+
+.sign__handle {
+  transition: color 0.3s var(--ease);
+}
+
+.sign__sep {
+  color: var(--rule-strong);
+  padding-inline: 0.9rem;
+}
+
+/* Закон страницы: наведение гасит соседей, а не красит выбранное. */
+.contact:hover a:not(:hover) .sign__value,
+.contact:hover a:not(:hover) .label {
+  color: var(--ink-dim);
 }
 
 /* ==========================================================================
