@@ -1,0 +1,56 @@
+name: Deploy to GitHub Pages
+
+# Сайт собирается из исходников, поэтому Pages кормится артефактом сборки,
+# а не веткой: класть dist/ в репозиторий пришлось бы коммитом на каждую
+# правку текста, и история превратилась бы в поток бинарных диффов.
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# В проде должен оказаться последний push, а не тот, что случайно финишировал
+# позже; предыдущий прогон при этом отменяется, а не встаёт в очередь.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # ci, а не install: ставит ровно то, что записано в package-lock.json,
+      # и падает при расхождении вместо тихого обновления зависимостей.
+      - run: npm ci
+
+      # Тот же скрипт, что и локально: tsc --noEmit, затем vite build, затем
+      # spa-fallback (404.html для клиентского роутинга и .nojekyll).
+      # Ошибка типов роняет сборку здесь и до Pages не доезжает.
+      - run: npm run build
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
