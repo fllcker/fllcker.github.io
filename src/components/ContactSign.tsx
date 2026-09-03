@@ -48,8 +48,13 @@ function useFitToWidth(text: string) {
       if (!room) return;
 
       lineEl.style.whiteSpace = 'nowrap';
+      // `max-width: 100%` из таблицы стилей обязан на время мерки уйти: иначе
+      // на узком экране ширина упирается в контейнер, отношение выходит
+      // единицей, и строка навсегда остаётся в пробном кегле.
+      lineEl.style.maxWidth = 'none';
       lineEl.style.fontSize = `${PROBE}px`;
       const width = lineEl.getBoundingClientRect().width;
+      lineEl.style.maxWidth = '';
       if (!width) return;
 
       const ideal = (PROBE * room) / width;

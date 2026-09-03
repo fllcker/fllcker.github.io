@@ -1,4 +1,5 @@
-import type { Schematic as SchematicData, SchematicNode } from '../content';
+import { ui, type Schematic as SchematicData, type SchematicNode } from '../content';
+import { useLocale } from '../i18n';
 
 /* Сетка схемы в единицах viewBox. Схема рисуется той же волосяной
  * графикой, что и вся страница: 1px, без заливок, без скруглений. */
@@ -68,6 +69,7 @@ function route(a: Box, b: Box): { d: string; lx: number; ly: number; anchor: Anc
 }
 
 export function Schematic({ data, title }: { data: SchematicData; title: string }) {
+  const { l } = useLocale();
   const boxes = new Map(data.nodes.map((node) => [node.id, box(node)]));
   // Кадр считается по фактическим габаритам, а не по объявленной сетке:
   // рамка, выросшая под длинную подпись, обязана попасть в кадр целиком.
@@ -78,6 +80,7 @@ export function Schematic({ data, title }: { data: SchematicData; title: string 
   return (
     /* Схема не ужимается до нечитаемости: на узком экране она прокручивается
      * внутри собственного контейнера, сохраняя кегль подписей. */
+    <>
     <div className="schematic-wrap">
       <svg
         className="schematic"
@@ -133,5 +136,13 @@ export function Schematic({ data, title }: { data: SchematicData; title: string 
         })}
       </svg>
     </div>
+      {/* Схема держит 460px, чтобы подписи не ушли в нечитаемый кегль, —
+        * значит, на телефоне она уезжает под край. Подсказка появляется
+        * ровно там, где это происходит, и набрана тем же моно-капсом, что
+        * и остальные служебные строки: нового языка на странице не заводим. */}
+      <p className="label schematic__hint" aria-hidden="true">
+        {l(ui.scrollSchematic)} →
+      </p>
+    </>
   );
 }

@@ -1,9 +1,7 @@
 /* ============================================================================
  *  ВЕСЬ ТЕКСТ И ВСЕ ДАННЫЕ САЙТА ЖИВУТ ЗДЕСЬ.
  *
- *  ⚠  ВСЁ НИЖЕ — ЗАГЛУШКА (PLACEHOLDER). Ни одна цифра, дата, компания,
- *     ссылка и метрика не подтверждены. Ищите пометку PLACEHOLDER и
- *     заменяйте на правду перед тем, как показывать сайт кому-либо.
+ *  Содержание боевое: все цифры, даты, адреса и ссылки — настоящие.
  *
  *  Как дополнять:
  *    • новый проект   → добавить объект в `projects`, он сам появится
@@ -48,7 +46,13 @@ export type Schematic = {
 };
 
 export type Block =
-  | { kind: 'prose'; heading: L; body: L<string[]> }
+  | {
+      kind: 'prose';
+      heading: L;
+      body: L<string[]>;
+      /** Блок сознательно неполон: страница говорит об этом сама. */
+      unfinished?: true;
+    }
   | { kind: 'points'; heading: L; items: { term: L; body: L }[] }
   | { kind: 'figures'; heading: L; items: { value: string; label: L }[] }
   | { kind: 'schematic'; heading: L; schematic: Schematic; caption: L };
@@ -80,12 +84,12 @@ export const identity = {
     ru: ['Бэкенд-инженер', 'Go', 'Распределённые системы'],
     en: ['Backend engineer', 'Go', 'Distributed systems'],
   } satisfies L<string[]>,
-  /* PLACEHOLDER — статус занятости */
+  /* Статус занятости. Читается в первом экране рядом с городом. */
   availability: {
     ru: 'Открыт к предложениям',
     en: 'Open to offers',
   } satisfies L,
-  /* PLACEHOLDER — город и часовой пояс */
+  /* Город и часовой пояс. */
   location: {
     ru: 'Удалённо · UTC+3',
     en: 'Remote · UTC+3',
@@ -109,7 +113,6 @@ export const intro: L<string[]> = {
 
 /* -------------------------------------------------------------------------- */
 /*  Работы                                                                     */
-/*  PLACEHOLDER — названия, даты, метрики и ссылки вымышленные.                */
 /* -------------------------------------------------------------------------- */
 
 export const projects: Project[] = [
@@ -140,13 +143,13 @@ export const projects: Project[] = [
         heading: { ru: 'Задача', en: 'The problem' },
         body: {
           ru: [
-            'Проект начинался обычным аниме-сайтом и приносил тысяч десять в месяц. Всё изменил AI-апскейл: 4K стал тем, за что люди платили подписку, и одновременно тем, что упёрлось в единственный ресурс, который нельзя докупить по щелчку, — интернет-канал серверов с хранилищем.',
+            'Проект начинался как пет-проект — обычный аниме-сайт. Всё изменил AI-апскейл: 4K стал тем, за что люди платили подписку, и одновременно тем, что упёрлось в единственный ресурс, который нельзя докупить по щелчку, — интернет-канал серверов с хранилищем.',
             'Сорок терабайт видео, до трёх тысяч одновременных зрителей на пике и подписка в двести рублей, из которой нужно было оплатить раздачу. Cloudflare, закрывавший часть трафика бесплатно, стал недоступен части пользователей в России — и бесплатный CDN, и защита серверов пропали одновременно.',
             'Дальше три года работы сводились к одному вопросу: как доставить тяжёлое видео большему числу людей, не упершись в канал и не разорившись на трафике.',
             'Отдельный контекст: проект начат в семнадцать лет. В восемнадцать я оформил ИП, подключил эквайринг и перевёл приём платежей в белую — с вебхуками, подтверждением оплаты и возвратами. Решения по бэкенду и инфраструктуре все три года принимал один человек.',
           ],
           en: [
-            'It started as an ordinary anime site making about ten thousand roubles a month. AI upscaling changed that: 4K became the thing people paid a subscription for, and at the same time the thing that ran into the one resource you cannot simply buy more of — the network capacity of the storage servers.',
+            'It started as a pet project — an ordinary anime site. AI upscaling changed that: 4K became the thing people paid a subscription for, and at the same time the thing that ran into the one resource you cannot simply buy more of — the network capacity of the storage servers.',
             'Forty terabytes of video, up to three thousand concurrent viewers at peak, and a subscription of two hundred roubles that had to cover delivery. Cloudflare, which had been absorbing part of the traffic for free, became unreachable for many users in Russia — the free CDN and the origin protection disappeared at the same moment.',
             'Three years of work after that came down to a single question: how to deliver heavy video to more people without saturating the channel or going broke on bandwidth.',
             'Some context: I started the project at seventeen. At eighteen I registered a sole proprietorship, connected acquiring and moved payments onto a proper legal footing — webhooks, payment confirmation, refunds. For all three years, every backend and infrastructure decision was made by one person.',
@@ -252,17 +255,20 @@ export const projects: Project[] = [
       },
       {
         kind: 'prose',
+        // TODO: дописать блок. Здесь остался один разбор — про отсутствие
+        // инженерных метрик. Два прежних абзаца (про отложенный 429 и про
+        // объём дисков на кеш-нодах) убраны как неубедительные. Нужны два-три
+        // решения, о которых есть что сказать по существу: что сделал, почему
+        // это было неверно и что сделал бы сейчас. Пока блок неполон, он несёт
+        // `unfinished` и говорит об этом читателю сам.
+        unfinished: true,
         heading: { ru: 'Что бы сделал иначе', en: 'What I would do differently' },
         body: {
           ru: [
             'Измерялось ровно одно — онлайн. Живое число зрителей считалось по открытым WebSocket-сессиям, срезы складывались в базу, и цифра пика взята оттуда. А инженерных метрик не было ни одной: ни попаданий в кеш, ни времени ответа, ни нагрузки на базы, ни алертов. Поэтому про эффект половины оптимизаций я честно могу говорить только оценочно. Сегодня я начал бы с измерения того, что собираюсь оптимизировать: без цифр не отличить решение, которое помогло, от решения, которое просто добавило кода.',
-            'При превышении лимита трафика сервер отдавал 429 не сразу, а после двадцатисекундной паузы — я хотел, чтобы для скрапера это выглядело поломкой, а не лимитом. Приём сомнительный: он удерживает соединение и горутину ровно в тот момент, когда сервер и без того под нагрузкой.',
-            'Кеш-ноды с дисками по восемьдесят гигабайт — решение от бюджета, а не от задачи. У конкурентов кеш-слой был устроен как частичная реплика хранилища: несколько серверов по паре терабайт, перекрывающих архив с запасом. Это заметно дороже и снимает с хранилища заметно больше.',
           ],
           en: [
             'Exactly one thing was measured: concurrency. The live number of viewers was counted from open WebSocket sessions, snapshots were written to the database, and the peak figure comes from there. Engineering metrics did not exist at all: no cache hit rate, no response times, no database load, no alerts. So I can only speak about the effect of half these optimisations as an estimate. Today I would start by measuring the thing I intend to optimise: without numbers there is no telling a change that helped from a change that merely added code.',
-            'When the traffic limit was exceeded, the server did not return 429 straight away but waited twenty seconds first — I wanted it to look like a malfunction to a scraper rather than a limit. The trick is questionable: it holds a connection and a goroutine open at exactly the moment the server is already under load.',
-            'Cache nodes with eighty-gigabyte disks were a decision made by the budget, not by the problem. Competitors ran their cache layer as a partial replica of storage: several servers of a couple of terabytes each, covering the archive with room to spare. That costs noticeably more and takes noticeably more off the origin.',
           ],
         },
       },
@@ -573,7 +579,6 @@ export const languages: Language[] = [
 
 /* -------------------------------------------------------------------------- */
 /*  Контакты                                                                   */
-/*  PLACEHOLDER — ни один адрес не настоящий.                                  */
 /* -------------------------------------------------------------------------- */
 
 /**
@@ -582,8 +587,12 @@ export const languages: Language[] = [
  * менять свободно, а любой добавленный контакт сам встаёт в нижнюю строку.
  */
 export const contacts: { label: string; value: string; href: string; primary?: true }[] = [
-  { label: 'Email', value: 'hey@fllcker.dev', href: 'mailto:hey@fllcker.dev', primary: true },
-  { label: 'Telegram', value: '@fllcker', href: 'https://t.me/fllcker' },
+  {
+    label: 'Email',
+    value: 'fllckerrdev@gmail.com',
+    href: 'mailto:fllckerrdev@gmail.com',
+    primary: true,
+  },
   { label: 'GitHub', value: 'github.com/fllcker', href: 'https://github.com/fllcker' },
 ];
 
@@ -615,22 +624,19 @@ export const ui = {
   period: { ru: 'Период', en: 'Period' },
   readMore: { ru: 'Смотреть работу', en: 'View work' },
   backToIndex: { ru: 'В индекс', en: 'Back to index' },
+  /* Появляется только там, где схема шире экрана и уезжает под край. */
+  scrollSchematic: { ru: 'Схема прокручивается', en: 'The diagram scrolls' },
   nextWork: { ru: 'Следующая работа', en: 'Next work' },
   notFound: { ru: 'Такой страницы нет', en: 'No such page' },
   notFoundBody: {
     ru: 'Возможно, ссылка устарела. Индекс работ на месте.',
     en: 'The link may be stale. The index of work is where it always was.',
   },
-  placeholderNotice: {
-    ru: 'Черновик: содержание временное',
-    en: 'Draft: placeholder content',
-  },
-  /* Отдельная пометка для блоков с цифрами. Общая приписка в подвале не
-   * работает: число выглядит как проверяемый факт ровно в той точке, где
-   * его читают, поэтому оговорка обязана стоять рядом с ним. */
-  placeholderFigures: {
-    ru: 'Цифры вымышлены — черновик',
-    en: 'Invented figures — draft',
+  /* Приписка к незаконченному блоку. Стоит рядом с ним, а не в подвале:
+   * общая оговорка на всю страницу распространялась бы и на дописанное. */
+  blockUnfinished: {
+    ru: 'Блок ещё дописывается',
+    en: 'Still being written',
   },
 } satisfies Record<string, L>;
 

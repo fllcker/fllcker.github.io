@@ -49,8 +49,8 @@ export function Project() {
                   eyebrow, который запрещён на первом экране. */}
               <div className="block__side">
                 <h2 className="block__heading">{l(block.heading)}</h2>
-                {block.kind === 'figures' ? (
-                  <p className="block__note label label--ink">{l(ui.placeholderFigures)}</p>
+                {block.kind === 'prose' && block.unfinished ? (
+                  <p className="block__note label label--ink">{l(ui.blockUnfinished)}</p>
                 ) : null}
               </div>
               <div>
@@ -78,7 +78,6 @@ export function Project() {
           <Link to="/#contact" className="act">
             {l(ui.contact)} →
           </Link>
-          <span className="label">{l(ui.placeholderNotice)}</span>
         </div>
       </footer>
     </>

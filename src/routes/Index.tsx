@@ -1,5 +1,14 @@
 import { Link } from 'react-router-dom';
-import { featuredCount, identity, intro, languages, projects, tiers, ui } from '../content';
+import {
+  featuredCount,
+  identity,
+  intro,
+  languages,
+  projects,
+  stack,
+  tiers,
+  ui,
+} from '../content';
 import { useLocale } from '../i18n';
 import { ContactSign } from '../components/ContactSign';
 import { Rule } from '../components/Rule';
@@ -63,7 +72,6 @@ export function Index() {
         <div className="sheet">
           <div className="section__head">
             <h2 className="section__title">{l(ui.index)}</h2>
-            <span className="label">{l(ui.placeholderNotice)}</span>
           </div>
         </div>
 
@@ -264,20 +272,22 @@ export function Index() {
           </dl>
         </div>
         <Rule />
+
         {/* Карта стека: площадь клетки — ступень. Раскладка считается в
           * StackMap.tsx, порядок и группировка выходят из весов сами. */}
-        <div className="sheet">
-          <StackMap />
+        <div className="stack__map">
+          <div className="sheet">
+            <StackMap />
+          </div>
+          <Rule />
         </div>
-        <Rule />
 
-        {/* ---- ОТКАТ: прежний вертикальный список стека -------------------
-         * Замена на карту обратима одним движением: закомментировать <StackMap />
-         * выше и раскомментировать блок ниже. Стили .stack__row остались в
-         * styles.css нетронутыми, поэтому правок в CSS для отката не нужно.
-         * Единственное, что придётся вернуть руками, — `stack` в импорте из
-         * ../content: сейчас его читает StackMap, и здесь он не нужен.
-
+        {/* Ниже 430px карта замолкает: у клетки прикладного остаётся около
+          * тридцати шести пикселей свободной ширины, и слово «Прикладное» не
+          * встаёт в неё даже с многоточием. На телефоне то же самое говорит
+          * список — теми же словами, целиком. Площадь там ничего не кодирует,
+          * потому что на клетке в тридцать пикселей сравнивать нечего;
+          * величину продолжает нести кегль имени. */}
         <ul className="stack__list">
           {tiers.flatMap((tier) =>
             stack
@@ -296,8 +306,6 @@ export function Index() {
               )),
           )}
         </ul>
-
-         * ---------------------------------------------------------------- */}
       </section>
 
       {/* ---- контакты ---- */}
@@ -318,7 +326,6 @@ export function Index() {
           <span className="label">
             {identity.handle} — {new Date().getFullYear()}
           </span>
-          <span className="label">{l(ui.placeholderNotice)}</span>
         </div>
       </footer>
     </>
