@@ -53,7 +53,12 @@ export type Block =
       /** Блок сознательно неполон: страница говорит об этом сама. */
       unfinished?: true;
     }
-  | { kind: 'points'; heading: L; items: { term: L; body: L }[] }
+  /**
+   * `link` — доказательство к одному пункту, а не ссылка работы. Работа
+   * ссылается на себя через `Project.links`; здесь ссылка стоит под тем
+   * абзацем, который на неё опирается, и нигде больше не всплывает.
+   */
+  | { kind: 'points'; heading: L; items: { term: L; body: L; link?: { label: string; href: string } }[] }
   | { kind: 'figures'; heading: L; items: { value: string; label: L }[] }
   | { kind: 'schematic'; heading: L; schematic: Schematic; caption: L };
 
@@ -283,14 +288,14 @@ export const projects: Project[] = [
       ru: 'Автор и разработчик бэкенда',
       en: 'Author and backend developer',
     },
-    stack: ['Go', 'PostgreSQL', 'Redis', 'gRPC', 'RabbitMQ', 'Xray', 'Docker'],
+    stack: ['Go', 'PostgreSQL', 'Redis', 'gRPC', 'Kafka', 'Xray', 'Docker'],
     summary: {
       ru: 'VPN по подписке: четыре сервиса, события, детект шаринга',
       en: 'Subscription VPN: four services, events, sharing detection',
     },
     lede: {
-      ru: 'VPN-сервис с продажей доступа по подписке через Telegram-бота. Четыре сервиса на Go, разделённые по домену: пользователи и подписки, VPN-серверы и устройства, платежи и кошелёк, бот. Синхронное общение по gRPC, асинхронное — через RabbitMQ с outbox, доступ на нодах выдаётся управлением Xray по его API.',
-      en: 'A VPN service selling subscription access through a Telegram bot. Four Go services split by domain: users and subscriptions, VPN servers and devices, payments and wallet, and the bot. Synchronous calls over gRPC, asynchronous ones over RabbitMQ with an outbox, and access on the nodes granted by driving Xray through its API.',
+      ru: 'VPN-сервис с продажей доступа по подписке через Telegram-бота. Четыре сервиса на Go, разделённые по домену: пользователи и подписки, VPN-серверы и устройства, платежи и кошелёк, бот. Синхронное общение по gRPC, асинхронное — событиями через Kafka, доступ на нодах выдаётся управлением Xray по его API.',
+      en: 'A VPN service selling subscription access through a Telegram bot. Four Go services split by domain: users and subscriptions, VPN servers and devices, payments and wallet, and the bot. Synchronous calls over gRPC, asynchronous ones by events over Kafka, and access on the nodes granted by driving Xray through its API.',
     },
     links: [],
     blocks: [
@@ -318,29 +323,48 @@ export const projects: Project[] = [
         kind: 'schematic',
         heading: { ru: 'Как устроено', en: 'How it works' },
         caption: {
-          ru: 'Синхронно сервисы разговаривают по gRPC, асинхронно — событиями через RabbitMQ. Подписку активирует один сервис, доступ на нодах выдаёт другой, и связывает их не общий вызов, а событие.',
-          en: 'Services talk over gRPC synchronously and by events through RabbitMQ asynchronously. One service activates the subscription, another grants access on the nodes, and what connects them is an event rather than a shared call.',
+          ru: 'Четыре сервиса, разделённые по домену; bot-service среди них — одновременно интерфейс в Telegram и бэкенд к нему. Между собой сервисы разговаривают двумя способами сразу: синхронно по gRPC и асинхронно событиями через Kafka, куда пишет и откуда читает каждый из четырёх. Кто кого именно вызывает, схема не рисует: таких связей много и они меняются.',
+          en: 'Four services split by domain; bot-service among them is both the interface inside Telegram and the backend behind it. The services talk to each other in two ways at once: synchronously over gRPC and asynchronously by events through Kafka, which every one of the four both writes to and reads from. Which service calls which is deliberately not drawn: there are many such links and they change.',
         },
+        /* Схема сознательно не рисует связи «сервис → сервис». Их много, они
+         * идут в обе стороны по обоим каналам и продолжают появляться: любая
+         * выбранная стрелка была бы не упрощением, а неправдой. Поэтому
+         * рисуются не связи, а две плоскости общения — полосы над рядом
+         * сервисов и под ним, — и каждый сервис включён в обе. Вход и ноды
+         * стоят по краям ряда, потому что единственный путь внутрь и наружу
+         * схема показать как раз может.
+         *
+         * Ширина клетки у сервисов дробная (2.5): четыре рамки с полными
+         * именами не встают в целые клетки, не выдавив вход и ноды за кадр,
+         * а кадр шире — это мельче подписи, кегль здесь дороже сетки. */
         schematic: {
-          cols: 14,
-          rows: 7,
+          cols: 18,
+          rows: 5,
           nodes: [
-            { id: 'users', label: 'users-service', note: 'auth · подписки', x: 7, y: 0, w: 3 },
-            { id: 'pay', label: 'payments-service', note: 'платежи · кошелёк', x: 11, y: 0, w: 3 },
-            { id: 'client', label: 'clients', note: 'Telegram · apps', x: 0, y: 3, w: 2 },
-            { id: 'gw', label: 'nginx', note: 'роутинг по префиксу', x: 3, y: 3, w: 2 },
-            { id: 'mq', label: 'RabbitMQ', note: 'события · outbox', x: 7, y: 3, w: 3 },
-            { id: 'srv', label: 'servers-service', note: 'девайсы · трафик', x: 7, y: 6, w: 3, emphasis: true },
-            { id: 'xray', label: 'Xray nodes', note: 'VPN-серверы', x: 11, y: 6, w: 3 },
+            { id: 'grpc', label: 'gRPC', note: 'синхронно · вызовы между сервисами', x: 4, y: 0, w: 10 },
+            { id: 'gw', label: 'nginx', note: 'роутинг по префиксу', x: 0, y: 2, w: 3 },
+            { id: 'users', label: 'users-service', note: 'auth · подписки', x: 4, y: 2, w: 2.5 },
+            { id: 'pay', label: 'payments-service', note: 'платежи · кошелёк', x: 6.5, y: 2, w: 2.5 },
+            { id: 'bot', label: 'bot-service', note: 'интерфейс · Stars', x: 9, y: 2, w: 2.5 },
+            { id: 'srv', label: 'servers-service', note: 'девайсы · трафик', x: 11.5, y: 2, w: 2.5, emphasis: true },
+            { id: 'xray', label: 'xray nodes', note: 'VPN-серверы', x: 15, y: 2, w: 2.5 },
+            { id: 'client', label: 'telegram', note: 'мини-апп · бот', x: 0, y: 4, w: 3 },
+            { id: 'mq', label: 'Kafka', note: 'асинхронно · читают и пишут все четыре', x: 4, y: 4, w: 10 },
           ],
           edges: [
-            { from: 'client', to: 'gw', label: 'https' },
-            { from: 'gw', to: 'users', label: 'auth' },
-            { from: 'gw', to: 'srv', label: 'sub' },
-            { from: 'pay', to: 'users', label: 'grpc' },
-            { from: 'users', to: 'mq', label: 'events', async: true },
-            { from: 'mq', to: 'srv', label: 'consume', async: true },
+            { from: 'client', to: 'gw', label: 'мини-апп' },
+            { from: 'gw', to: 'users', label: 'api' },
             { from: 'srv', to: 'xray', label: 'add/remove' },
+            /* Включение в плоскость, а не вызов: подписи здесь были бы
+             * восемь раз одним и тем же словом. */
+            { from: 'users', to: 'grpc' },
+            { from: 'pay', to: 'grpc' },
+            { from: 'bot', to: 'grpc' },
+            { from: 'srv', to: 'grpc' },
+            { from: 'users', to: 'mq', async: true },
+            { from: 'pay', to: 'mq', async: true },
+            { from: 'bot', to: 'mq', async: true },
+            { from: 'srv', to: 'mq', async: true },
           ],
         },
       },
@@ -394,9 +418,20 @@ export const projects: Project[] = [
               en: 'Subscription and access live in different services, joined by an event',
             },
             body: {
-              ru: 'Оплата активирует подписку в одном сервисе, а ключи на VPN-нодах выдаёт другой. Прямого вызова между ними нет: users-service публикует событие через outbox, servers-service его потребляет и приводит ноды в нужное состояние. Падение сервиса серверов в момент оплаты не оставляет пользователя без доступа — событие дождётся его в очереди. Отдельная фоновая задача добирает подписки, застрявшие между состояниями.',
-              en: 'Payment activates a subscription in one service, while another hands out keys on the VPN nodes. There is no direct call between them: users-service publishes an event through an outbox, servers-service consumes it and brings the nodes to the required state. The servers service being down at the moment of payment does not leave the user without access — the event waits in the queue. A separate background job picks up subscriptions stuck between states.',
+              ru: 'Оплата активирует подписку в одном сервисе, а ключи на VPN-нодах выдаёт другой. Прямого вызова между ними нет: users-service публикует событие, servers-service его потребляет и приводит ноды в нужное состояние. Падение сервиса серверов в момент оплаты не оставляет пользователя без доступа — событие дождётся его в топике. Отдельная фоновая задача добирает подписки, застрявшие между состояниями.',
+              en: 'Payment activates a subscription in one service, while another hands out keys on the VPN nodes. There is no direct call between them: users-service publishes an event, servers-service consumes it and brings the nodes to the required state. The servers service being down at the moment of payment does not leave the user without access — the event waits in the topic. A separate background job picks up subscriptions stuck between states.',
             },
+          },
+          {
+            term: {
+              ru: 'Партиции читаются параллельно, порядок внутри партиции сохраняется',
+              en: 'Partitions are read in parallel, order inside a partition is kept',
+            },
+            body: {
+              ru: 'Когда консьюмер берёт по одному сообщению за раз, партиция стоит ровно столько, сколько работает самый медленный обработчик, — а он в это время ходит на ноду по API Xray. Обрабатывать пачку разом тоже нельзя: события одной подписки должны примениться в том порядке, в каком случились, иначе продление и отзыв доступа меняются местами. Поэтому параллельность идёт не по сообщениям, а по ключу: свой воркер на каждую пару «топик — партиция», внутри ключа строго по очереди, между ключами одновременно. Пул под это я написал свой — маленький, с generic-ключом и без зависимостей. Важнее параллельности в нём поведение на ребалансе: при отзыве партиции пул дожидается только той задачи, что выполняется прямо сейчас, а остаток очереди сбрасывает. Колбэк возвращается быстро, ребаланс не выпадает по таймауту, а сброшенные записи не были помечены на коммит — новый владелец партиции получит их заново.',
+              en: 'When a consumer takes one message at a time, a partition stalls for exactly as long as its slowest handler runs — and that handler is out talking to a node over the Xray API. Handling a batch all at once is not an option either: events on one subscription have to land in the order they happened, or a renewal and a revocation swap places. So parallelism runs by key rather than by message: one worker per topic-partition pair, strictly in order inside a key, simultaneously across keys. The pool for it is my own — small, generic over the key type, no dependencies. What matters in it is not the parallelism but the behaviour on a rebalance: when a partition is revoked the pool waits only for the task running right now and drops the rest of the queue. The callback returns quickly, the rebalance does not time out, and the dropped records were never marked for commit — the new owner of the partition receives them again.',
+            },
+            link: { label: 'go-workerpool', href: 'https://github.com/fllcker/go-workerpool' },
           },
           {
             term: {
@@ -505,9 +540,9 @@ export const stack: StackEntry[] = [
     note: { ru: 'контракты между сервисами', en: 'contracts between services' },
   },
   {
-    name: 'RabbitMQ',
+    name: 'Kafka',
     tier: 'working',
-    note: { ru: 'события и outbox', en: 'events and outbox' },
+    note: { ru: 'асинхронные события', en: 'asynchronous events' },
   },
   {
     name: 'Docker',

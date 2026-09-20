@@ -106,6 +106,18 @@ function BlockBody({ block, projectName }: { block: Block; projectName: string }
               <div className="points__item">
                 <h3 className="points__term">{l(item.term)}</h3>
                 <p className="points__body">{l(item.body)}</p>
+                {item.link ? (
+                  <p className="points__link">
+                    <a
+                      className="act"
+                      href={item.link.href}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                    >
+                      {item.link.label} ↗
+                    </a>
+                  </p>
+                ) : null}
               </div>
             </li>
           ))}

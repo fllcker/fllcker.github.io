@@ -49,7 +49,11 @@ function route(a: Box, b: Box): { d: string; lx: number; ly: number; anchor: Anc
 
   if (columnsOverlap) {
     const down = b.cy > a.cy;
-    const x = Math.min(a.x + a.w, b.x + b.w) - 10;
+    // Вертикаль идёт по середине общей колонки, а не у её края. Под рядом
+    // одинаковых рамок, включённых в одну полосу, линии обязаны стоять по
+    // центрам рамок: край читается как промах, а не как решение. У вложенных
+    // рамок середина общей колонки — это и есть центр узкой из двух.
+    const x = (Math.max(a.x, b.x) + Math.min(a.x + a.w, b.x + b.w)) / 2;
     const sy = down ? a.y + a.h : a.y;
     const ey = down ? b.y : b.y + b.h;
     return { d: `M${x},${sy} V${ey}`, lx: x + 5, ly: (sy + ey) / 2 + 2, anchor: 'start' };
