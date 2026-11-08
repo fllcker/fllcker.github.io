@@ -151,15 +151,56 @@ export const projects: Project[] = [
             'Проект начинался как пет-проект — обычный аниме-сайт. Всё изменил AI-апскейл: 4K стал тем, за что люди платили подписку, и одновременно тем, что упёрлось в единственный ресурс, который нельзя докупить по щелчку, — интернет-канал серверов с хранилищем.',
             'Сорок терабайт видео, до трёх тысяч одновременных зрителей на пике и подписка в двести рублей, из которой нужно было оплатить раздачу. Cloudflare, закрывавший часть трафика бесплатно, стал недоступен части пользователей в России — и бесплатный CDN, и защита серверов пропали одновременно.',
             'Дальше три года работы сводились к одному вопросу: как доставить тяжёлое видео большему числу людей, не упершись в канал и не разорившись на трафике.',
-            'Отдельный контекст: проект начат в семнадцать лет. В восемнадцать я оформил ИП, подключил эквайринг и перевёл приём платежей в белую — с вебхуками, подтверждением оплаты и возвратами. Решения по бэкенду и инфраструктуре все три года принимал один человек.',
+            'Отдельный контекст: проект начат в семнадцать лет. В восемнадцать я оформил ИП, подключил эквайринг и перевёл приём платежей в белую — с вебхуками, подтверждением оплаты и возвратами.',
           ],
           en: [
             'It started as a pet project — an ordinary anime site. AI upscaling changed that: 4K became the thing people paid a subscription for, and at the same time the thing that ran into the one resource you cannot simply buy more of — the network capacity of the storage servers.',
             'Forty terabytes of video, up to three thousand concurrent viewers at peak, and a subscription of two hundred roubles that had to cover delivery. Cloudflare, which had been absorbing part of the traffic for free, became unreachable for many users in Russia — the free CDN and the origin protection disappeared at the same moment.',
             'Three years of work after that came down to a single question: how to deliver heavy video to more people without saturating the channel or going broke on bandwidth.',
-            'Some context: I started the project at seventeen. At eighteen I registered a sole proprietorship, connected acquiring and moved payments onto a proper legal footing — webhooks, payment confirmation, refunds. For all three years, every backend and infrastructure decision was made by one person.',
+            'Some context: I started the project at seventeen. At eighteen I registered a sole proprietorship, connected acquiring and moved payments onto a proper legal footing — webhooks, payment confirmation, refunds.',
           ],
         },
+      },
+      {
+        kind: 'points',
+        heading: { ru: 'Команда', en: 'The team' },
+        items: [
+          {
+            term: { ru: 'Я — сооснователь, бэкенд и инфраструктура', en: 'Me — co-founder, backend and infrastructure' },
+            body: {
+              ru: 'Отвечал за бэкенд, инфраструктуру и видеопайплайн: микросервисы, API-шлюз, хранение и доставку видео, собственный CDN и обработку платежей.',
+              en: 'I was responsible for the backend, infrastructure and video pipeline: microservices, the API gateway, video storage and delivery, our own CDN and payment processing.',
+            },
+          },
+          {
+            term: { ru: 'Сооснователь — фронтенд', en: 'Co-founder — frontend' },
+            body: {
+              ru: 'Мы начали проект вместе. Он занимался разработкой сайта и его пользовательского интерфейса.',
+              en: 'We started the project together. He developed the website and its user interface.',
+            },
+          },
+          {
+            term: { ru: 'Мобильный разработчик', en: 'Mobile developer' },
+            body: {
+              ru: 'Разрабатывал приложения для Android, iOS и Android TV.',
+              en: 'Developed the Android, iOS and Android TV apps.',
+            },
+          },
+          {
+            term: { ru: '4К-мейкеры', en: '4K makers' },
+            body: {
+              ru: 'Занимались апскейлом аниме до 4К и подготовкой видеоконтента для сервиса.',
+              en: 'Upscaled anime to 4K and prepared video content for the service.',
+            },
+          },
+          {
+            term: { ru: 'Служба поддержки — два человека', en: 'Support — two people' },
+            body: {
+              ru: 'Отвечали на обращения пользователей и помогали с вопросами по работе сервиса.',
+              en: 'Responded to user enquiries and helped with questions about the service.',
+            },
+          },
+        ],
       },
       {
         kind: 'schematic',
@@ -259,23 +300,24 @@ export const projects: Project[] = [
         ],
       },
       {
-        kind: 'prose',
-        // TODO: дописать блок. Здесь остался один разбор — про отсутствие
-        // инженерных метрик. Два прежних абзаца (про отложенный 429 и про
-        // объём дисков на кеш-нодах) убраны как неубедительные. Нужны два-три
-        // решения, о которых есть что сказать по существу: что сделал, почему
-        // это было неверно и что сделал бы сейчас. Пока блок неполон, он несёт
-        // `unfinished` и говорит об этом читателю сам.
-        unfinished: true,
+        kind: 'points',
         heading: { ru: 'Что бы сделал иначе', en: 'What I would do differently' },
-        body: {
-          ru: [
-            'Измерялось ровно одно — онлайн. Живое число зрителей считалось по открытым WebSocket-сессиям, срезы складывались в базу, и цифра пика взята оттуда. А инженерных метрик не было ни одной: ни попаданий в кеш, ни времени ответа, ни нагрузки на базы, ни алертов. Поэтому про эффект половины оптимизаций я честно могу говорить только оценочно. Сегодня я начал бы с измерения того, что собираюсь оптимизировать: без цифр не отличить решение, которое помогло, от решения, которое просто добавило кода.',
-          ],
-          en: [
-            'Exactly one thing was measured: concurrency. The live number of viewers was counted from open WebSocket sessions, snapshots were written to the database, and the peak figure comes from there. Engineering metrics did not exist at all: no cache hit rate, no response times, no database load, no alerts. So I can only speak about the effect of half these optimisations as an estimate. Today I would start by measuring the thing I intend to optimise: without numbers there is no telling a change that helped from a change that merely added code.',
-          ],
-        },
+        items: [
+          {
+            term: { ru: 'Начал бы с инженерных метрик', en: 'Start with engineering metrics' },
+            body: {
+              ru: 'Измерялось ровно одно — онлайн. Живое число зрителей считалось по открытым WebSocket-сессиям, срезы складывались в базу, и цифра пика взята оттуда. А инженерных метрик не было ни одной: ни попаданий в кеш, ни времени ответа, ни нагрузки на базы, ни алертов. Поэтому про эффект половины оптимизаций я честно могу говорить только оценочно. Сегодня я начал бы с измерения того, что собираюсь оптимизировать: без цифр не отличить решение, которое помогло, от решения, которое просто добавило кода.',
+              en: 'Exactly one thing was measured: concurrency. The live number of viewers was counted from open WebSocket sessions, snapshots were written to the database, and the peak figure comes from there. Engineering metrics did not exist at all: no cache hit rate, no response times, no database load, no alerts. So I can only speak about the effect of half these optimisations as an estimate. Today I would start by measuring the thing I intend to optimise: without numbers there is no telling a change that helped from a change that merely added code.',
+            },
+          },
+          {
+            term: { ru: 'Сначала соотнёс бы цену подписки с её себестоимостью', en: 'Match the subscription price to the cost of serving it' },
+            body: {
+              ru: 'Мы ошиблись в том, какое наполнение обещали за цену подписки. Ориентировались на молодую аудиторию, примерно 16–25 лет, с ограниченной готовностью платить. По моим экспериментам в 2023 году, рабочая цена была около 200 ₽ в месяц: выше покупали заметно хуже. При этом команда хотела максимально качественный сервис и видео с высоким битрейтом. 4К было частью маркетингового обещания, а битрейт мы могли менять: одинаковое разрешение не означает одинаковый размер файла. У нас 22-минутная серия в 4К занимала примерно 2,5–3 ГБ, и за 200 ₽ в месяц нужно было обеспечить пользователю стриминг таких серий. Это давило сразу на стоимость трафика, пропускную способность и хранение. Временный кеш сегментов на CDN помогал разгружать хранилища, но дополнительные копии полных серий для распределения нагрузки требовали денег, которых у нас не было. Даже 50 тайтлов — примерно 600 серий — в трёх копиях означали бы хранение 1800 экземпляров серий. А для пользователя 50 тайтлов мало: он ожидает найти в 4К популярное аниме, а не небольшую подборку. Сегодня я сначала проверил бы, сходятся ли доступная аудитории цена, стоимость просмотра и размер нужного каталога, а уже на этой основе выбирал битрейт и формулировал обещание подписки. Мы же сначала задали планку качества, а потом пытались уложить её в экономику.',
+              en: 'We misjudged what we could promise for the subscription price. We were targeting a young audience, roughly 16–25, with a limited willingness to pay. In my experiments in 2023, around ₽200 a month worked; purchases dropped noticeably above that. Meanwhile, the team wanted the best possible service and high-bitrate video. 4K was part of the marketing promise, while bitrate was adjustable: the same resolution does not mean the same file size. Our 22-minute 4K episodes were around 2.5–3 GB each, and ₽200 a month had to cover streaming those episodes to a subscriber. That put pressure on traffic costs, bandwidth and storage at once. Temporarily caching segments on the CDN helped offload storage, but extra copies of full episodes to distribute the load cost money we did not have. Even 50 titles — roughly 600 episodes — stored in triplicate would mean 1,800 episode copies. Yet 50 titles is a small catalogue for a viewer who expects to find popular anime in 4K, rather than a limited selection. Today I would first check whether the price the audience will pay can support viewing costs and the catalogue they expect, then choose the bitrate and define the subscription promise around that. We set the quality target first and tried to make the economics fit afterwards.',
+            },
+          },
+        ],
       },
     ],
   },
