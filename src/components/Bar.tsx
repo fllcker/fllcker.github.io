@@ -1,7 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { identity, ui } from '../content';
 import { useLocale } from '../i18n';
-import { Rule } from './Rule';
 
 /**
  * Верхняя планка: марка слева, язык и действие справа.
@@ -22,6 +21,8 @@ export function Bar() {
         <div className="bar__spacer" />
 
         <nav className="bar__nav">
+          <Link className="bar__section" to="/#work">{l(ui.work)}</Link>
+          <Link className="bar__section bar__about" to="/#about">{l(ui.about)}</Link>
           <div className="lang">
             <span className="sr-only">{locale === 'ru' ? 'Язык сайта' : 'Site language'}</span>
             <button
@@ -56,7 +57,6 @@ export function Bar() {
           )}
         </nav>
       </div>
-      <Rule />
     </header>
   );
 }

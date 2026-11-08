@@ -21,7 +21,7 @@ export function Project() {
       <section className="sheet">
         <div className="spread__head">
           <div className="work__code">
-            <Link to="/#index" className="act">
+            <Link to="/#work" className="act">
               ← {l(ui.backToIndex)}
             </Link>
           </div>

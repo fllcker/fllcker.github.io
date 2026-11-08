@@ -1,333 +1,49 @@
 import { Link } from 'react-router-dom';
-import {
-  featuredCount,
-  identity,
-  intro,
-  languages,
-  projects,
-  stack,
-  tiers,
-  ui,
-} from '../content';
+import { contacts, identity, intro, languages, projects, projectTypeLabels, stack, tiers, ui } from '../content';
 import { useLocale } from '../i18n';
-import { ContactSign } from '../components/ContactSign';
-import { Rule } from '../components/Rule';
-import { Schematic } from '../components/Schematic';
-import { StackMap } from '../components/StackMap';
-import { Triad } from '../components/Triad';
 
 export function Index() {
   const { l } = useLocale();
-
   return (
     <>
-      {/* ---- первый экран: имя дома на полноширинной линейке ---- */}
-      <section className="hero">
-        <div className="sheet">
-          {/* Между планкой и именем не стоит ничего: подпись над заголовком —
-              это eyebrow, и контракт первого экрана говорит «больше ничего». */}
-          <div className="hero__body">
-            <h1 className="hero__name rise" style={{ '--i': 1 } as React.CSSProperties}>
-              {identity.handle}
-            </h1>
-          </div>
+      <section className="sheet editorial-hero">
+        <p className="hero__kicker">{l({ ru: 'Независимые проекты и инженерная практика', en: 'Independent projects and engineering practice' })}<br />2023—2026</p>
+        <h1>{l({ ru: 'За каждым', en: 'Behind every' })}<br />{l({ ru: 'экраном — ', en: 'screen, a ' })}<em>{l({ ru: 'система.', en: 'system.' })}</em></h1>
+        <div className="hero__intro">
+          <p>{l({ ru: 'Я fllcker, бэкенд-инженер.', en: 'I’m fllcker, a backend engineer.' })}<br />{l({ ru: 'Создаю сервисы на Go и разбираюсь с тем,', en: 'I build services in Go and work through' })}<br className="desktop-break" />{l({ ru: ' что происходит после первого релиза.', en: ' what happens after the first release.' })}</p>
+          <a className="act" href="#work">{l({ ru: 'Избранные работы', en: 'Selected work' })} ↓</a>
         </div>
-
-        <Rule draw i={2} />
-
-        <div className="sheet">
-          {/* Строка состава несёт и статус: то, что раньше стояло над именем,
-              переехало сюда, под имя, где ему и место на лейбле. */}
-          <div className="composition rise" style={{ '--i': 3 } as React.CSSProperties}>
-            <p className="composition__set">
-              {l(identity.composition).map((part, n, all) => (
-                <span className="composition__item" key={part}>
-                  <span className="label label--ink">{part}</span>
-                  {n < all.length - 1 ? (
-                    <span className="label composition__sep" aria-hidden="true">
-                      /
-                    </span>
-                  ) : null}
-                </span>
-              ))}
-            </p>
-            {/* Год связан с локацией в один токен: порознь он отрывается
-                на отдельную строку и повисает сиротой при переносе. */}
-            <p className="composition__set composition__status">
-              <span className="label label--ink composition__item">
-                {l(identity.availability)}
-              </span>
-              <span className="label composition__item">
-                {l(identity.location)} · {identity.since}—
-              </span>
-            </p>
-          </div>
-        </div>
-
-        <Rule draw i={4} />
       </section>
-
-      {/* ---- индекс коллекции ---- */}
-      <section className="section" id="index">
-        <div className="sheet">
-          <div className="section__head">
-            <h2 className="section__title">{l(ui.index)}</h2>
-          </div>
-        </div>
-
-        <Rule />
-
-        <ul className="index__list">
-          {projects.map((project) => (
-            <li key={project.slug}>
-              <Link to={`/work/${project.slug}`}>
-                <div className="sheet">
-                  <div className="index__row">
-                    <span className="label mono">{project.code}</span>
-                    <span className="index__name">{project.name}</span>
-                    <span className="label index__meta">{project.period}</span>
-                  </div>
-                </div>
-              </Link>
-              <Rule />
-            </li>
-          ))}
-
-          {[
-            { href: '#about', name: l(ui.about) },
-            { href: '#stack', name: l(ui.stack) },
-            { href: '#contact', name: l(ui.contact) },
-          ].map((entry) => (
-            <li key={entry.href}>
-              <a href={entry.href}>
-                <div className="sheet">
-                  <div className="index__row">
-                    <span aria-hidden="true" />
-                    <span className="index__name">{entry.name}</span>
-                    <span className="label index__meta">↓</span>
-                  </div>
-                </div>
-              </a>
-              <Rule />
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* ---- о себе ---- */}
-      <section className="section" id="about">
-        <div className="sheet">
-          <div className="section__head">
-            <h2 className="section__title">{l(ui.about)}</h2>
-          </div>
-        </div>
-        <Rule />
-        <div className="sheet">
-          <div className="prose" style={{ paddingBlock: '2rem' }}>
-            {l(intro).map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
-            ))}
-          </div>
-        </div>
-        <Rule />
-
-        {/* Языки живут внутри «О себе», а не отдельной секцией: два пункта
-            не наполняют раздел, а в оглавлении появился бы пункт, за которым
-            стоят две строки. Черта под каждым — тот же приём, что у ступеней
-            стека, поэтому новая грамматика на странице не заводится. */}
-        <div className="sheet">
-          {/* Метка даёт блоку якорь для беглого взгляда: языки — то, что
-              ищут прицельно, а заголовка секции у них теперь нет. */}
-          <p className="label langs__head">{l(ui.languages)}</p>
-          <dl className="langs">
-            {languages.map((language) => (
-              <div
-                className="langs__item"
-                key={language.name.en}
-                style={{ '--reach': language.reach } as React.CSSProperties}
-              >
-                <dt className="langs__name">
-                  {l(language.name)}
-                  <span className="label langs__level">{l(language.level)}</span>
-                </dt>
-                {language.gloss ? <dd className="langs__gloss">{l(language.gloss)}</dd> : null}
-              </div>
-            ))}
-          </dl>
-        </div>
-        <Rule />
-      </section>
-
-      {/* ---- работы ---- */}
-      <section className="section" id="work">
-        <div className="sheet">
-          <div className="section__head">
-            <h2 className="section__title">{l(ui.work)}</h2>
-            <span className="label">
-              {projects.length.toString().padStart(2, '0')}
-            </span>
-          </div>
-        </div>
-
-        {/* Целиком — только последние `featuredCount` работ. Остальные уходят
-            строками ниже: их глубина уже живёт на /work/<slug>, и главная не
-            растёт линейно с числом проектов. */}
-        {projects.slice(0, featuredCount).map((project) => {
-          const schematic = project.blocks.find((block) => block.kind === 'schematic');
+      <section className="sheet editorial-work" id="work">
+        <h2 className="sr-only">{l(ui.work)}</h2>
+        {projects.map(project => {
+          const figures = project.blocks.find(block => block.kind === 'figures');
+          const figure = figures?.items[0];
           return (
-            <article key={project.slug}>
-              <Rule />
-              <div className="sheet">
-                <div className="work">
-                  <div>
-                    <div className="work__code">
-                      <span className="label mono">{project.code}</span>
-                      <span className="label mono">{project.period}</span>
-                    </div>
-
-                    <Link to={`/work/${project.slug}`} className="work__link">
-                      <h3 className="work__name">{project.name}</h3>
-                    </Link>
-
-                    <p className="work__summary">{l(project.summary)}</p>
-                    <p className="work__lede">{l(project.lede)}</p>
-
-                    <div className="work__foot">
-                      <Link to={`/work/${project.slug}`} className="act">
-                        {l(ui.readMore)} →
-                      </Link>
-                      {project.links.map((link) => (
-                        <a
-                          key={link.href}
-                          className="act"
-                          href={link.href}
-                          target="_blank"
-                          rel="noreferrer noopener"
-                        >
-                          {link.label} ↗
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-
-                  {schematic ? (
-                    <div>
-                      <Schematic
-                        data={schematic.schematic}
-                        title={`${project.name} — ${l(schematic.heading)}`}
-                      />
-                      <p className="schematic__cap">{l(schematic.caption)}</p>
-                    </div>
-                  ) : null}
-                </div>
+            <article className="editorial-project" key={project.slug}>
+              <div className="project__number"><span>{project.code}</span><p>{project.period}</p></div>
+              <div className="project__main">
+                <p className="label">{l(projectTypeLabels[project.type])}</p>
+                <h3><Link to={`/work/${project.slug}`}>{project.name}<span className="project__arrow" aria-hidden="true">↗</span></Link></h3>
+                <p className="project__description">{l(project.lede)}</p>
+                <ul className="tags" aria-label={l(ui.stack)}>{project.stack.map(technology => <li key={technology}>{technology}</li>)}</ul>
+                <div className="project__links"><Link className="act" to={`/work/${project.slug}`}>{l(ui.readMore)} ↗</Link>{project.links.map(link => <a className="act" key={link.href} href={link.href} target="_blank" rel="noreferrer noopener">{link.label} ↗</a>)}</div>
               </div>
-
-              <Rule />
-
-              <div className="sheet">
-                <Triad project={project} />
-              </div>
+              <div className="project__margin">{figure ? <><strong>{figure.value}</strong><span>{l(figure.label)}</span></> : <><span className="project__role-label">{l(ui.role)}</span><p>{l(project.role)}</p></>}</div>
             </article>
           );
         })}
-
-        {/* Хвост коллекции: строкой индекса, а не полным разворотом. */}
-        {projects.length > featuredCount ? (
-          <ul className="index__list">
-            {projects.slice(featuredCount).map((project) => (
-              <li key={project.slug}>
-                <Rule />
-                <Link to={`/work/${project.slug}`}>
-                  <div className="sheet">
-                    <div className="index__row">
-                      <span className="label mono">{project.code}</span>
-                      <span className="index__name">{project.name}</span>
-                      <span className="label index__meta">{project.period}</span>
-                    </div>
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : null}
       </section>
-
-      {/* ---- стек: ступень рисуется площадью клетки, кеглем и подписью ---- */}
-      <section className="section" id="stack">
-        <div className="sheet">
-          <div className="section__head">
-            <h2 className="section__title">{l(ui.stack)}</h2>
-            <span className="label">{l(ui.stackScale)}</span>
-          </div>
-
-          {/* Легенда стоит до карты, а не в подвале: ступень без определения —
-            * ещё одна непроверяемая оценка, с определением её можно спросить. */}
-          <dl className="tiers">
-            {tiers.map((tier) => (
-              <div key={tier.id} className="tiers__item" data-tier={tier.id}>
-                <dt className="label label--ink">{l(tier.name)}</dt>
-                <dd className="tiers__gloss">{l(tier.gloss)}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-        <Rule />
-
-        {/* Карта стека: площадь клетки — ступень. Раскладка считается в
-          * StackMap.tsx, порядок и группировка выходят из весов сами. */}
-        <div className="stack__map">
-          <div className="sheet">
-            <StackMap />
-          </div>
-          <Rule />
-        </div>
-
-        {/* Ниже 430px карта замолкает: у клетки прикладного остаётся около
-          * тридцати шести пикселей свободной ширины, и слово «Прикладное» не
-          * встаёт в неё даже с многоточием. На телефоне то же самое говорит
-          * список — теми же словами, целиком. Площадь там ничего не кодирует,
-          * потому что на клетке в тридцать пикселей сравнивать нечего;
-          * величину продолжает нести кегль имени. */}
-        <ul className="stack__list">
-          {tiers.flatMap((tier) =>
-            stack
-              .filter((entry) => entry.tier === tier.id)
-              .map((entry) => (
-                <li key={entry.name}>
-                  <div className="sheet">
-                    <div className="stack__row" data-tier={entry.tier}>
-                      <span className="stack__name">{entry.name}</span>
-                      <span className="label stack__tier">{l(tier.name)}</span>
-                      <span className="label stack__note">{l(entry.note)}</span>
-                    </div>
-                  </div>
-                  <Rule />
-                </li>
-              )),
-          )}
-        </ul>
+      <section className="sheet editorial-section" id="about">
+        <div className="section__side"><span className="label">01 / {l(ui.about)}</span><p>{l(identity.location)}<br />{l(identity.availability)}</p></div>
+        <div className="about__body"><h2>{l({ ru: 'От идеи до продакшена.', en: 'From idea to production.' })}</h2><div className="prose">{l(intro).map(paragraph => <p key={paragraph}>{paragraph}</p>)}</div><dl className="languages">{languages.map(language => <div key={language.name.en}><dt>{l(language.name)}</dt><dd><span>{l(language.level)}</span>{language.gloss ? <p>{l(language.gloss)}</p> : null}</dd></div>)}</dl></div>
       </section>
-
-      {/* ---- контакты ---- */}
-      <section className="section contact" id="contact">
-        <div className="sheet">
-          <div className="section__head">
-            <h2 className="section__title">{l(ui.contact)}</h2>
-            <span className="label">{l(identity.availability)}</span>
-          </div>
-        </div>
-        <Rule />
-        <ContactSign />
-        <Rule />
+      <section className="sheet editorial-section" id="stack">
+        <div className="section__side"><span className="label">02 / {l(ui.stack)}</span><p>{l(ui.stackScale)}</p></div>
+        <div><h2>{l({ ru: 'Инструменты и практика.', en: 'Tools and practice.' })}</h2><div className="stack-groups">{tiers.map(tier => <section key={tier.id} className="stack-group"><h3>{l(tier.name)}</h3><p>{l(tier.gloss)}</p><ul>{stack.filter(entry => entry.tier === tier.id).map(entry => <li key={entry.name}><strong>{entry.name}</strong><span>{l(entry.note)}</span></li>)}</ul></section>)}</div></div>
       </section>
-
-      <footer className="sheet">
-        <div className="foot">
-          <span className="label">
-            {identity.handle} — {new Date().getFullYear()}
-          </span>
-        </div>
-      </footer>
+      <section className="sheet editorial-contact" id="contact"><div><span className="label">03 / {l(ui.contact)}</span><h2>{l({ ru: 'Давайте построим', en: 'Let’s build' })}<br /><em>{l({ ru: 'что-нибудь сложное.', en: 'something complex.' })}</em></h2><div className="contact__links">{contacts.map(contact => <a className={contact.primary ? 'contact__primary' : 'act'} key={contact.label} href={contact.href}>{contact.value} ↗</a>)}</div></div><p>{l(identity.composition).join(' · ')}<br />{l(identity.availability)}</p></section>
+      <footer className="sheet"><div className="foot"><span className="label">{identity.handle} © {new Date().getFullYear()}</span><a href="#" className="act">{l({ ru: 'Наверх', en: 'Back to top' })} ↑</a></div></footer>
     </>
   );
 }

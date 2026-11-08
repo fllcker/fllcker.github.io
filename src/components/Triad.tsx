@@ -1,4 +1,4 @@
-import { type Project, ui } from '../content';
+import { type Project, projectTypeLabels, ui } from '../content';
 import { useLocale } from '../i18n';
 
 /**
@@ -10,6 +10,10 @@ export function Triad({ project }: { project: Project }) {
 
   return (
     <dl className="triad">
+      <div>
+        <dt className="label triad__term">{l({ ru: 'Тип', en: 'Type' })}</dt>
+        <dd className="triad__value">{l(projectTypeLabels[project.type])}</dd>
+      </div>
       <div>
         <dt className="label triad__term">{l(ui.role)}</dt>
         <dd className="triad__value">{l(project.role)}</dd>

@@ -1,1441 +1,1124 @@
-/* ============================================================================
- *  ДОМ-ИНДЕКС — система
- *
- *  Одно правило держит всю страницу: волосяная линейка в 1px.
- *  Нет карточек, нет скруглений, нет теней, нет второго цвета.
- *  Иерархию несёт кегль и яркость — больше ничего.
- * ========================================================================= */
-
+/* Editorial portfolio: warm paper, serif headings, restrained terracotta. */
 :root {
-  /* Основа. Чистый чёрный — дом не разбавляет. */
-  --ground: #000000;
-
-  /* Чернила. Всё, что читается, держит контраст ≥ 4.5:1 к основе. */
-  --ink: #ffffff;
-  --ink-2: #8a8a8a; /* 5.7:1 — подписи, метаданные */
-  --ink-dim: #9a9a9a; /* 6.9:1 — приглушённый сосед активной строки */
-
-  /* Линейки. Единственное средство деления. */
-  --rule: #232323;
-  --rule-faint: #141414; /* вертикальная сетка листа */
-  --rule-strong: #3a3a3a; /* линейка активной строки */
-  --rule-lit: rgba(255, 255, 255, 0.5); /* свет, идущий за курсором */
-
-  --sans: 'Geist', system-ui, sans-serif;
-  --mono: 'Geist Mono', ui-monospace, monospace;
-
-  /* Лист. Ширина и поля, к которым привязана вертикальная сетка. */
-  --sheet: 1560px;
-  --gutter: clamp(20px, 4vw, 64px);
-  --bar: 52px;
-
-  /* Метка. Мономелкий капслок с трекингом — лейбл состава. */
-  --label-size: 0.6875rem;
-  --label-track: 0.16em;
-
-  --ease: cubic-bezier(0.16, 1, 0.3, 1);
-
-  color-scheme: dark;
+  --ground:#f1eee6;
+  --ink:#272c26;
+  --ink-2:#686b61;
+  --ink-dim:#5f655b;
+  --rule:#cecfc2;
+  --rule-faint:#e5e3d8;
+  --rule-strong:#959b88;
+  --accent:#a44b31;
+  --sans:'Golos Text',Arial,sans-serif;
+  --serif:'PT Serif',Georgia,serif;
+  --mono:ui-monospace,SFMono-Regular,Consolas,monospace;
+  --sheet:1320px;
+  --gutter:56px;
+  --bar:88px;
+  color-scheme:light;
+  font-family:var(--sans)
 }
 
-/* --- сброс ---------------------------------------------------------------- */
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+*,*::before,*::after {
+  box-sizing:border-box
 }
 
 * {
-  margin: 0;
+  margin:0
 }
 
 html {
-  -webkit-text-size-adjust: 100%;
-}
-
-/* Якорь не должен уезжать под фиксированную планку. */
-[id] {
-  scroll-margin-top: calc(var(--bar) + 1.5rem);
+  -webkit-text-size-adjust:100%;
+  scroll-behavior:smooth;
+  scrollbar-color:#b0b2a3 var(--ground)
 }
 
 body {
-  background: var(--ground);
-  color: var(--ink);
-  font-family: var(--sans);
-  font-size: 1.0625rem;
-  line-height: 1.6;
-  font-synthesis-weight: none;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-  /* Здесь намеренно нет overflow-x: hidden. Он не лечит переполнение,
-   * а прячет его: на телефоне читатель молча теряет часть содержимого,
-   * а любая проверка ширины возвращает «чисто» по построению. */
-}
-
-img,
-svg {
-  display: block;
-  max-width: 100%;
-}
-
-button {
-  font: inherit;
-  color: inherit;
-  background: none;
-  border: 0;
-  padding: 0;
-  cursor: pointer;
+  background:var(--ground);
+  color:var(--ink);
+  font:16px/1.7 var(--sans);
+  font-synthesis:none;
+  -webkit-font-smoothing:antialiased
 }
 
 a {
-  color: inherit;
-  text-decoration: none;
+  color:inherit;
+  text-decoration:none
 }
 
-ul,
-ol {
-  list-style: none;
-  padding: 0;
+button {
+  font:inherit;
+  color:inherit;
+  background:none;
+  border:0;
+  padding:0;
+  cursor:pointer
 }
 
-/* --- поверхности браузера ------------------------------------------------ */
-/* То, что мы не рисовали, всё равно должно принадлежать этой системе. */
+img,svg {
+  display:block;
+  max-width:100%
+}
+
+ul,ol {
+  list-style:none;
+  padding:0
+}
+
+button,a {
+  touch-action:manipulation
+}
 
 ::selection {
-  background: var(--ink);
-  color: var(--ground);
+  background:#a44b3133
 }
 
 :focus-visible {
-  outline: 1px solid var(--ink);
-  outline-offset: 5px;
+  outline:2px solid var(--accent);
+  outline-offset:5px
 }
 
-html {
-  scrollbar-color: #2e2e2e var(--ground);
-  scrollbar-width: thin;
+[id] {
+  scroll-margin-top:30px
 }
-
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--ground);
-}
-
-::-webkit-scrollbar-thumb {
-  background: #2e2e2e;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #454545;
-}
-
-/* ==========================================================================
- *  Лист и сетка
- * ======================================================================= */
 
 .sheet {
-  max-width: var(--sheet);
-  margin-inline: auto;
-  padding-inline: var(--gutter);
+  width:100%;
+  max-width:var(--sheet);
+  margin-inline:auto;
+  padding-inline:var(--gutter)
 }
 
-/* Вертикальные линейки листа: страница читается как разлинованная бумага. */
-.gridlines {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
+.sr-only {
+  position:absolute;
+  width:1px;
+  height:1px;
+  padding:0;
+  margin:-1px;
+  overflow:hidden;
+  clip:rect(0,0,0,0);
+  white-space:nowrap;
+  border:0
 }
-
-.gridlines__inner {
-  height: 100%;
-  max-width: var(--sheet);
-  margin-inline: auto;
-  padding-inline: var(--gutter);
-  background-image: linear-gradient(90deg, var(--rule-faint) 1px, transparent 1px);
-  background-size: calc(100% / 6) 100%;
-  background-origin: content-box;
-  background-clip: content-box;
-  background-repeat: repeat-x;
-}
-
-@media (max-width: 700px) {
-  .gridlines__inner {
-    background-size: calc(100% / 2) 100%;
-  }
-}
-
-.page {
-  position: relative;
-  z-index: 1;
-}
-
-/* ==========================================================================
- *  Линейка — сигнатура системы
- *  Свет идёт по линии за курсором: лист живой, а не напечатанный.
- * ======================================================================= */
-
-.rule {
-  position: relative;
-  width: 100%;
-  height: 1px;
-  background: var(--rule);
-  border: 0;
-}
-
-.rule::after {
-  content: '';
-  position: absolute;
-  inset: -1px 0;
-  background: radial-gradient(
-    360px 2px at var(--mx, 50%) 50%,
-    var(--rule-lit),
-    transparent 70%
-  );
-  opacity: var(--g, 0);
-  transition: opacity 0.3s linear;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: reduce), (hover: none) {
-  .rule::after {
-    display: none;
-  }
-}
-
-/* ==========================================================================
- *  Типографика
- * ======================================================================= */
 
 .label {
-  font-family: var(--mono);
-  font-size: var(--label-size);
-  font-weight: 400;
-  letter-spacing: var(--label-track);
-  text-transform: uppercase;
-  color: var(--ink-2);
-  font-variant-numeric: tabular-nums;
+  font:500 10px/1.6 var(--sans);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-2)
 }
 
 .label--ink {
-  color: var(--ink);
+  color:var(--ink)
 }
 
 .mono {
-  font-family: var(--mono);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric:tabular-nums
 }
 
-.prose p {
-  max-width: 68ch;
-  color: var(--ink-dim);
+.act {
+  font-size:12px;
+  line-height:1.5;
+  display:inline-block;
+  transition:color .2s
 }
 
-.prose p + p {
-  margin-top: 1.1em;
+.act:hover {
+  color:var(--accent)
 }
 
-.prose strong {
-  color: var(--ink);
-  font-weight: 500;
+.rule {
+  height:1px;
+  background:var(--rule)
 }
 
-/* ==========================================================================
- *  Верхняя планка
- * ======================================================================= */
+.rule::after {
+  display:none
+}
 
+h1,h2,h3 {
+  font-weight:400
+}
+
+em {
+  font-family:var(--serif);
+  font-weight:400;
+  color:var(--accent)
+}
+
+/* The header shares the page's printable area. */
 .bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 20;
-  background: var(--ground);
+  max-width:var(--sheet);
+  margin-inline:auto;
+  padding:0 var(--gutter)
 }
 
 .bar__inner {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  height: var(--bar);
-  max-width: var(--sheet);
-  margin-inline: auto;
-  padding-inline: var(--gutter);
+  display:flex;
+  align-items:center;
+  gap:24px;
+  padding:28px 0;
+  border-bottom:1px solid var(--rule)
 }
 
 .bar__mark {
-  font-family: var(--mono);
-  font-size: var(--label-size);
-  letter-spacing: var(--label-track);
-  text-transform: uppercase;
-  font-weight: 500;
+  font:italic 26px/1.2 var(--serif);
+  letter-spacing:-1px
 }
 
 .bar__spacer {
-  flex: 1;
+  flex:1
 }
 
 .bar__nav {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
+  display:flex;
+  align-items:center;
+  gap:30px;
+  font-size:12px;
+  color:var(--ink-2)
 }
 
-/* Переключатель языка: два состояния, никакой иконки-глобуса. */
+.bar__nav a:hover {
+  color:var(--accent)
+}
+
 .lang {
-  display: flex;
-  align-items: baseline;
-  gap: 0.35rem;
+  display:flex;
+  gap:7px;
+  font-size:11px
 }
 
 .lang__opt {
-  font-family: var(--mono);
-  font-size: var(--label-size);
-  letter-spacing: var(--label-track);
-  text-transform: uppercase;
-  color: var(--ink-2);
-  transition: color 0.2s var(--ease);
+  min-height:30px;
+  min-width:24px;
+  color:var(--ink-2)
 }
 
-.lang__opt[aria-pressed='true'] {
-  color: var(--ink);
+.lang__opt[aria-pressed=true] {
+  color:var(--accent)
 }
 
-.lang__opt:hover {
-  color: var(--ink);
-}
-
-/* Был --rule-strong: около 1.5:1 на чёрном, внутри основного двуязычного
- * контроля. --ink-2 даёт 6.1:1 и совпадает с неактивным вариантом языка. */
 .lang__sep {
-  color: var(--ink-2);
-  font-family: var(--mono);
-  font-size: var(--label-size);
+  align-self:center;
+  color:var(--rule-strong)
 }
 
-/* Ссылка-действие: подчёркивание рисуется линейкой, а не текст-декорацией. */
-.act {
-  position: relative;
-  font-family: var(--mono);
-  font-size: var(--label-size);
-  letter-spacing: var(--label-track);
-  text-transform: uppercase;
-  color: var(--ink);
-  padding-bottom: 3px;
+/* Front page — the selected editorial study. */
+.editorial-hero {
+  padding-top:55px;
+  padding-bottom:60px
 }
 
-.act::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 1px;
-  background: var(--ink);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.45s var(--ease);
+.hero__kicker {
+  font-size:11px;
+  line-height:1.6;
+  color:var(--ink-2);
+  max-width:280px;
+  margin-bottom:35px
 }
 
-.act:hover::after,
-.act:focus-visible::after {
-  transform: scaleX(1);
+.editorial-hero h1 {
+  font:400 clamp(52px,7.7vw,104px)/1.07 var(--serif);
+  letter-spacing:-.06em;
+  margin-bottom:32px
 }
 
-/* ==========================================================================
- *  Первый экран
- * ======================================================================= */
-
-.hero {
-  padding-top: var(--bar);
+.editorial-hero h1 em {
+  white-space:nowrap
 }
 
-.hero__body {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  min-height: min(78svh, 760px);
-  padding-block: clamp(3rem, 9vh, 7rem) 0;
+.hero__intro {
+  display:flex;
+  align-items:center;
+  gap:35px
 }
 
-/* На телефоне пустота над именем — не композиция, а потерянный первый экран:
- * это контекст, который PRODUCT.md называет основным. Имя и строка состава
- * обязаны попасть в верхние две трети экрана. */
-@media (max-width: 620px) {
-  .hero__body {
-    min-height: min(40svh, 400px);
-    padding-block: clamp(1.25rem, 4vh, 2.5rem) 0;
-  }
+.hero__star {
+  font-size:76px;
+  line-height:1.2;
+  color:var(--accent)
 }
 
-/* Имя дома набрано во всю ширину листа — кегль и есть заявление.
- * 31vw подобрано так, чтобы слово доходило до правого поля и не переполняло
- * его ни на 320px, ни на широком мониторе, где ширину держит потолок в 31rem. */
-.hero__name {
-  font-size: clamp(3.5rem, 31vw, 31rem);
-  font-weight: 600;
-  line-height: 0.78;
-  letter-spacing: -0.04em;
-  margin-bottom: clamp(0.75rem, 2vh, 1.5rem);
+.hero__intro p {
+  font-size:14px;
+  line-height:1.7;
+  color:var(--ink-2)
 }
 
-/* Строка состава — как жаккардовый лейбл на изнанке: слева из чего сделано,
- * справа статус. На узком экране распадается на две строки, не ломаясь. */
-.composition {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.6rem 2rem;
-  padding-block: 1.1rem;
+.hero__intro>.act {
+  margin-left:auto;
+  flex-shrink:0
 }
 
-.composition__set {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.6rem 0.9rem;
+.editorial-project {
+  display:grid;
+  grid-template-columns:1fr 3fr 1fr;
+  gap:32px;
+  padding:40px 0;
+  border-top:1px solid var(--rule);
+  align-items:start
 }
 
-.composition__status {
-  gap: 0.6rem 1.5rem;
+.project__number {
+  font-size:12px;
+  font-variant-numeric:tabular-nums
 }
 
-/* Разделитель уезжает вместе со своим словом, поэтому при переносе
- * строка заканчивается слэшем, а не начинается с него. */
-.composition__item {
-  white-space: nowrap;
+.project__number p {
+  font-size:10px;
+  line-height:1.6;
+  color:var(--ink-2);
+  margin-top:12px;
+  max-width:120px
 }
 
-.composition__sep {
-  color: var(--rule-strong);
-  padding-left: 0.9rem;
+.project__main {
+  min-width:0
 }
 
-/* ==========================================================================
- *  Секции
- * ======================================================================= */
-
-.section {
-  padding-block: clamp(3.5rem, 9vh, 8rem) 0;
+.project__main h3 {
+  font:400 48px/1.3 var(--serif);
+  letter-spacing:-.025em;
+  margin:10px 0 14px
 }
 
-.section__head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 2rem;
-  padding-bottom: clamp(1.75rem, 4vh, 3rem);
+.project__main h3 a:hover {
+  color:var(--accent)
 }
 
-.section__title {
-  font-size: clamp(1.75rem, 4.5vw, 3.25rem);
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: -0.03em;
+.project__arrow {
+  display:inline-block;
+  font-family:var(--sans);
+  font-size:.55em;
+  vertical-align:middle;
+  margin-left:14px;
+  color:var(--accent);
+  transition:transform .2s
 }
 
-/* На узком экране заголовок и приписка не делят строку: русская приписка
- * длиннее английской и жмётся к заголовку вплотную. */
-@media (max-width: 620px) {
-  .section__head {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-  }
+.project__main h3 a:hover .project__arrow {
+  transform:translate(3px,-3px)
 }
 
-/* ==========================================================================
- *  Индекс коллекции
- *  Строка светлеет под курсором, соседи приглушаются: состояние чтения.
- * ======================================================================= */
-
-.index__list:hover .index__row:not(:hover) .index__name,
-.index__list:focus-within .index__row:not(:focus-within) .index__name {
-  color: var(--ink-dim);
+.project__description {
+  font-size:14px;
+  line-height:1.8;
+  color:var(--ink-2);
+  max-width:560px
 }
 
-.index__row {
-  display: grid;
-  grid-template-columns: 3.5rem 1fr auto;
-  align-items: baseline;
-  gap: 1.5rem;
-  padding-block: clamp(0.9rem, 2.2vh, 1.4rem);
-  transition: color 0.3s var(--ease);
+.tags {
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin-top:20px
 }
 
-.index__name {
-  font-size: clamp(1.125rem, 2.2vw, 1.5rem);
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  transition: color 0.3s var(--ease);
+.tags li {
+  border:1px solid var(--rule);
+  padding:4px 8px;
+  font-size:10px;
+  line-height:1.4;
+  color:var(--ink-2);
+  border-radius:3px
 }
 
-.index__meta {
-  color: var(--ink-2);
+.project__links {
+  display:flex;
+  flex-wrap:wrap;
+  gap:22px;
+  margin-top:22px
 }
 
-/* ==========================================================================
- *  Работа — разворот лука
- * ======================================================================= */
-
-.work {
-  display: grid;
-  grid-template-columns: 7fr 5fr;
-  gap: clamp(2rem, 5vw, 5rem);
-  padding-block: clamp(2.5rem, 6vh, 5rem);
-  align-items: start;
+.project__margin {
+  text-align:right;
+  align-self:center;
+  min-width:0
 }
 
-/* Грид-элемент по умолчанию не уже своего содержимого, поэтому схема
- * с её min-width распирала бы колонку и весь лист. Обнуляем минимум —
- * прокрутка тогда живёт внутри .schematic-wrap, как и задумано. */
-.work > *,
-.block > * {
-  min-width: 0;
+.project__margin>strong {
+  display:block;
+  font:400 clamp(36px,4.5vw,58px)/1.2 var(--serif);
+  letter-spacing:-.06em;
+  color:var(--accent)
 }
 
-@media (max-width: 900px) {
-  .work {
-    grid-template-columns: 1fr;
-    gap: 2.5rem;
-  }
+.project__margin>span {
+  display:block;
+  font-size:10px;
+  line-height:1.5;
+  color:var(--ink-2);
+  margin-top:9px
+}
+
+.project__margin>p {
+  font-size:12px;
+  line-height:1.7;
+  margin-top:12px
+}
+
+.project__role-label {
+  text-transform:uppercase;
+  letter-spacing:.08em
+}
+
+.editorial-section {
+  display:grid;
+  grid-template-columns:1fr 3fr;
+  gap:56px;
+  padding-top:65px;
+  padding-bottom:65px;
+  position:relative
+}
+
+.editorial-section::before,.editorial-contact::before {
+  content:'';
+  position:absolute;
+  top:0;
+  left:var(--gutter);
+  right:var(--gutter);
+  height:1px;
+  background:var(--rule)
+}
+
+.section__side>.label,
+.editorial-contact>div>.label {
+  font-size:11px;
+  font-weight:600;
+  color:var(--ink-dim)
+}
+
+.section__side>p {
+  font-size:11px;
+  color:var(--ink-2);
+  line-height:1.8;
+  margin-top:20px
+}
+
+.editorial-section h2 {
+  font:400 36px/1.3 var(--serif);
+  letter-spacing:-.035em;
+  margin-bottom:28px
+}
+
+.prose p {
+  font-size:15px;
+  color:var(--ink-dim);
+  line-height:1.9;
+  max-width:70ch
+}
+
+.prose p+p {
+  margin-top:20px
+}
+
+.languages {
+  margin-top:36px;
+  max-width:650px
+}
+
+.languages>div {
+  display:grid;
+  grid-template-columns:1fr 2fr;
+  gap:20px;
+  border-top:1px solid var(--rule);
+  padding:15px 0
+}
+
+.languages dt {
+  font-size:13px
+}
+
+.languages dd {
+  font-size:12px;
+  color:var(--ink-2)
+}
+
+.languages dd p {
+  font-size:11px;
+  margin-top:5px
+}
+
+.stack-groups {
+  display:grid;
+  gap:30px
+}
+
+.stack-group h3 {
+  font:italic 24px var(--serif);
+  color:var(--accent);
+  margin-bottom:6px
+}
+
+.stack-group>p {
+  font-size:12px;
+  color:var(--ink-2);
+  margin-bottom:16px
+}
+
+.stack-group li {
+  display:grid;
+  grid-template-columns:1fr 2fr;
+  gap:20px;
+  padding:10px 0;
+  border-top:1px solid var(--rule);
+  font-size:12px
+}
+
+.stack-group li strong {
+  font-weight:500
+}
+
+.stack-group li span {
+  color:var(--ink-2)
+}
+
+.editorial-contact {
+  position:relative;
+  display:flex;
+  justify-content:space-between;
+  gap:50px;
+  padding-top:65px;
+  padding-bottom:55px
+}
+
+.editorial-contact h2 {
+  font:400 clamp(32px,4vw,50px)/1.25 var(--serif);
+  letter-spacing:-.035em;
+  margin:22px 0 30px
+}
+
+.contact__links {
+  display:flex;
+  align-items:baseline;
+  flex-wrap:wrap;
+  gap:20px
+}
+
+.contact__primary {
+  font-size:16px;
+  color:var(--accent);
+  overflow-wrap:anywhere
+}
+
+.contact__links a:hover {
+  text-decoration:underline;
+  text-underline-offset:5px
+}
+
+.editorial-contact>p {
+  text-align:right;
+  font-size:11px;
+  color:var(--ink-2);
+  max-width:220px;
+  line-height:1.8
+}
+
+.foot {
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+  padding:24px 0 30px;
+  border-top:1px solid var(--rule)
+}
+
+/* Case pages keep the full content; generous margins support long reading. */
+.spread__head {
+  padding:45px 0 50px
 }
 
 .work__code {
-  display: flex;
-  gap: 1.25rem;
-  padding-bottom: clamp(1rem, 2.5vh, 1.75rem);
-}
-
-.work__name {
-  font-size: clamp(2.75rem, 8vw, 6.5rem);
-  font-weight: 600;
-  line-height: 0.88;
-  letter-spacing: -0.04em;
-  display: inline-block;
-}
-
-.work__summary {
-  margin-top: 1.25rem;
-  font-size: clamp(1.0625rem, 1.5vw, 1.375rem);
-  line-height: 1.45;
-  max-width: 38ch;
-  color: var(--ink);
-  font-weight: 400;
-  letter-spacing: -0.01em;
-  /* Не рвать по дефису внутри терминов вроде at-least-once. */
-  text-wrap: pretty;
-  hyphens: none;
-}
-
-.work__lede {
-  margin-top: 1.5rem;
-  color: var(--ink-dim);
-  max-width: 56ch;
-}
-
-.work__foot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 1.5rem 2.5rem;
-  margin-top: clamp(1.75rem, 4vh, 2.75rem);
-}
-
-/* Триада метаданных: роль / стек / период. Один порядок, одно место, всегда. */
-.triad {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
-  gap: 1.25rem 2rem;
-  padding-block: 1.25rem;
-}
-
-.triad__term {
-  color: var(--ink-2);
-}
-
-.triad__value {
-  margin-top: 0.5rem;
-  font-family: var(--mono);
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  color: var(--ink);
-}
-
-/* Имя работы: линейка выезжает из-под него на наведение всей строки. */
-.work__link .work__name {
-  position: relative;
-}
-
-.work__link .work__name::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0.08em;
-  height: 2px;
-  background: var(--ink);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.55s var(--ease);
-}
-
-.work__link:hover .work__name::after,
-.work__link:focus-visible .work__name::after {
-  transform: scaleX(1);
-}
-
-/* ==========================================================================
- *  Схема архитектуры
- *  Рисуется той же волосяной графикой — доказательство, а не иллюстрация.
- * ======================================================================= */
-
-/* Схема прокручивается внутри себя, а не сжимается до нечитаемого кегля.
- * Ширина листа при этом не ломается: переполнение живёт в этом контейнере. */
-.schematic-wrap {
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  padding-bottom: 0.5rem;
-}
-
-/* Подсказка молчит везде, где схема помещается целиком. Порог считается, а
- * не угадывается: схема держит min-width 460px, поля листа на этих ширинах
- * дают по 20px с каждой стороны, значит уезжать она начинает ниже 500px. */
-.schematic__hint {
-  display: none;
-  padding-top: 0.35rem;
-  color: var(--ink-2);
-}
-
-@media (max-width: 499px) {
-  .schematic__hint {
-    display: block;
-  }
-}
-
-.schematic {
-  width: 100%;
-  min-width: 460px;
-  height: auto;
-  overflow: visible;
-}
-
-.schematic__box {
-  fill: none;
-  stroke: var(--rule-strong);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-}
-
-.schematic__box--emphasis {
-  stroke: var(--ink);
-}
-
-/* Подписи выбивают линию за собой, чтобы связь не перечёркивала текст. */
-.schematic text {
-  paint-order: stroke;
-  stroke: var(--ground);
-  stroke-width: 3px;
-  stroke-linejoin: round;
-}
-
-.schematic__label {
-  font-family: var(--mono);
-  font-size: 7.5px;
-  letter-spacing: 0.05em;
-  fill: var(--ink);
-  text-transform: uppercase;
-}
-
-.schematic__note {
-  font-family: var(--mono);
-  font-size: 6.5px;
-  letter-spacing: 0.03em;
-  fill: var(--ink-2);
-}
-
-.schematic__edge {
-  fill: none;
-  stroke: var(--rule-strong);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-}
-
-.schematic__edge--async {
-  stroke-dasharray: 3 3;
-}
-
-.schematic__edge-label {
-  font-family: var(--mono);
-  font-size: 6px;
-  letter-spacing: 0.05em;
-  fill: var(--ink-2);
-  text-transform: uppercase;
-}
-
-.schematic__cap {
-  margin-top: 1.25rem;
-  color: var(--ink-2);
-  font-size: 0.875rem;
-  line-height: 1.55;
-  max-width: 46ch;
-}
-
-/* ==========================================================================
- *  Стек — ступень рисуется кеглем и подписывается словом.
- *
- *  ⚠  СПИСОК ЗАМЕНЁН КАРТОЙ СТЕКА (.stack-map ниже). Разметка списка в
- *     Index.tsx закомментирована, а эти правила оставлены живыми: снять
- *     комментарий в разметке — и старый вид вернётся без правок в CSS.
- *
- *  Одна шкала, три ступени. Кегль и подпись обязаны означать одно и то же:
- *  если бы размеров было больше, чем ступеней, читатель видел бы разницу,
- *  которую подпись не объясняет, и шкала перестала бы быть проверяемой.
- * ======================================================================= */
-
-/* Легенда шкалы. Черта повторяет убывание кегля в списке — определение и
- * величина заявлены в одном месте, до первой строки списка. */
-.tiers {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(1.25rem, 3vw, 2.5rem);
-  padding-bottom: clamp(1.5rem, 3.5vh, 2.5rem);
-}
-
-.tiers__item {
-  align-content: start;
-}
-
-.tiers__item::before {
-  content: '';
-  display: block;
-  width: var(--tier-w);
-  max-width: 100%;
-  height: 1px;
-  margin-bottom: 0.7rem;
-  background: var(--ink);
-}
-
-.tiers__item[data-tier='core'] {
-  --tier-w: 7rem;
-}
-
-.tiers__item[data-tier='working'] {
-  --tier-w: 4.2rem;
-}
-
-.tiers__item[data-tier='applied'] {
-  --tier-w: 2.1rem;
-}
-
-.tiers__gloss {
-  margin-top: 0.4rem;
-  max-width: 32ch;
-  font-size: 0.8125rem;
-  line-height: 1.45;
-  color: var(--ink-2);
-}
-
-.stack__row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  align-items: baseline;
-  gap: 2rem;
-  padding-block: clamp(0.5rem, 1.5vh, 1rem);
-  transition: color 0.3s var(--ease);
-}
-
-.stack__list:hover .stack__row:not(:hover) {
-  color: var(--ink-dim);
-}
-
-.stack__name {
-  /* Глубину видно, не читая подписи: ядро — крупно, прикладное — мелко. */
-  font-size: calc(0.9rem + var(--mag) * clamp(0.35rem, 1.15vw, 0.78rem));
-  font-weight: 500;
-  line-height: 1.1;
-  letter-spacing: -0.03em;
-}
-
-.stack__row[data-tier='core'] {
-  --mag: 5;
-}
-
-.stack__row[data-tier='working'] {
-  --mag: 3.2;
-}
-
-.stack__row[data-tier='applied'] {
-  --mag: 1.8;
-}
-
-/* Повтор одного слова подряд собирает ступень в группу — заголовки групп
- * не нужны, а подпись остаётся у каждой строки, где её и читают. */
-.stack__tier {
-  flex-shrink: 0;
-  text-align: right;
-  transition: color 0.3s var(--ease);
-}
-
-.stack__row:hover .stack__tier {
-  color: var(--ink);
-}
-
-.stack__note {
-  text-align: right;
-  flex-shrink: 0;
-}
-
-@media (max-width: 900px) {
-  .tiers {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-
-  .tiers__gloss {
-    max-width: 52ch;
-  }
-}
-
-/* На узком экране имя занимает свою строку: втроём они не помещаются,
- * а сжимать имя ради подписей — терять величину, которая и есть шкала. */
-@media (max-width: 720px) {
-  .stack__row {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 0.35rem 1rem;
-  }
-
-  .stack__name {
-    grid-column: 1 / -1;
-  }
-
-  .stack__tier {
-    text-align: left;
-  }
-}
-
-/* ==========================================================================
- *  Карта стека — площадь клетки есть ступень.
- *
- *  Тот же приём, что в карте диска WinDirStat, только без цвета: цветом там
- *  кодируется тип файла, здесь кодировать нечего — ступень уже сказана
- *  площадью, кеглем и яркостью заливки. Второй цвет ничего бы не добавил,
- *  а систему страницы сломал бы.
- *
- *  Раскладку считает `StackMap.tsx` и отдаёт в процентах, поэтому здесь нет
- *  ни сетки, ни колонок: CSS отвечает только за поверхность клетки.
- * ======================================================================= */
-
-.stack-map__frame {
-  margin: 0;
-  padding-block: clamp(1.5rem, 4vh, 2.75rem);
-}
-
-.stack-map {
-  position: relative;
-  width: 100%;
-  background: var(--ground);
-  /* Пропорции приходят из компонента: под них пересчитана и раскладка. */
-  border-top: 1px solid var(--rule);
-  border-left: 1px solid var(--rule);
-}
-
-.stack-map__cell {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 0.5rem;
-  overflow: hidden;
-  padding: clamp(0.5rem, 1.1vw, 0.95rem);
-  /* Соседние клетки делят один волосок: правую и нижнюю грань рисует левый
-   * верхний сосед, поэтому линия нигде не удваивается. */
-  border-right: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
-  background: var(--fill);
-  color: var(--ink);
-  container-type: size;
-  transition:
-    background-color 0.35s var(--ease),
-    color 0.3s var(--ease);
-}
-
-/* Заливка — третья запись той же ступени, после площади и кегля. Она едва
- * различима поодиночке и хорошо читается на контрасте соседних клеток.
- *
- * Цвета непрозрачные, а не rgba поверх основы: вертикальные линейки листа
- * (.gridlines) висят фоном под всей страницей и просвечивали бы сквозь
- * полупрозрачную клетку — карта разлиновывалась бы чужой сеткой поверх
- * собственной. Значения — те же доли белого, сведённые с чёрным заранее. */
-.stack-map__cell[data-tier='core'] {
-  --fill: #0e0e0e; /* белый 5.5% на основе */
-  --mag: 5;
-}
-
-.stack-map__cell[data-tier='working'] {
-  --fill: #080808; /* белый 3% */
-  --mag: 3.2;
-}
-
-.stack-map__cell[data-tier='applied'] {
-  --fill: #030303; /* белый 1.2% */
-  --mag: 1.8;
-}
-
-/* Тот же закон, что у списка работ: наведение гасит соседей, а не красит
- * выбранное. Внимание переносится, ничего не подсвечивается. */
-.stack-map:hover .stack-map__cell:not(:hover) {
-  color: var(--ink-dim);
-}
-
-.stack-map__cell:hover {
-  background: #1a1a1a;
-}
-
-.stack-map__name {
-  /* Кегль задан ступенью — как в старом списке. Три границы не дают имени
-   * вылезти из тесной клетки: по высоте, по ширине и по длине самого слова
-   * (--fit = 1/длина приходит из компонента). Величина уступает
-   * читаемости, но не наоборот. */
-  font-size: min(
-    calc(0.8rem + var(--mag) * clamp(0.16rem, 0.42vw, 0.4rem)),
-    26cqh,
-    24cqw,
-    calc((100cqw - 2rem) * var(--fit, 0.1) * 1.3)
-  );
-  font-weight: 500;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
-  overflow-wrap: anywhere;
-}
-
-.stack-map__meta {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.stack-map__tier,
-.stack-map__note {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.stack-map__tier {
-  color: var(--ink);
-  opacity: 0.55;
-}
-
-.stack-map__note {
-  /* Примечание — самая мелкая запись клетки: в тесноте оно уходит первым. */
-  font-size: 0.625rem;
-  letter-spacing: 0.1em;
-  text-transform: none;
-}
-
-/* Клетка, где примечание уже не поместилось: ступень осталась одна и обязана
- * встать целиком. Трекинг у неё съедает четверть строки — его и снимаем,
- * потому что «Прикладное» с многоточием не отвечает ни на один вопрос. */
-.stack-map__cell[data-tight] .stack-map__tier {
-  font-size: 0.625rem;
-  letter-spacing: 0.04em;
-}
-
-.stack-map__cap {
-  display: block;
-  margin-top: 0.9rem;
-  text-transform: none;
-  letter-spacing: 0.02em;
-}
-
-/* На узкой карте клетки становятся тесными: примечание отдаёт место имени.
- * Граница в 880px измерена, а не выбрана: до неё примечание обрезается
- * многоточием в четырёх клетках из одиннадцати, с неё — ни в одной. */
-@media (max-width: 879px) {
-  .stack-map__note {
-    display: none;
-  }
-}
-
-@media (max-width: 760px) {
-  .stack-map__cell {
-    padding: 0.5rem;
-  }
-}
-
-/* Телефон: карта уступает место списку.
- *
- * Ниже 430px клетка прикладного — это ~36px свободной ширины, в которые
- * «ПРИКЛАДНОЕ» не встаёт даже обрезанным, а сама карта сжимается до
- * 280×341, где сравнивать площади уже нечем. Список говорит то же самое
- * словами и целиком. Обе разметки лежат в документе, и переключает их
- * только эта пара правил — display:none убирает скрытую ветку и из
- * дерева доступности, поэтому скринридер читает ровно одну. */
-@media (max-width: 429px) {
-  .stack__map {
-    display: none;
-  }
-
-  /* На 320px ступень и примечание в одной строке делят 280 пикселей, и
-   * ступени достаётся тридцать — слово обрезается. Строка распускается в
-   * колонку: три коротких строки читаются, одна обрезанная нет. */
-  .stack__row {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.2rem;
-  }
-
-  .stack__note {
-    text-align: left;
-  }
-}
-
-@media (min-width: 430px) {
-  .stack__list {
-    display: none;
-  }
-}
-
-/* ==========================================================================
- *  Языки
- *
- *  Та же графика, что у ступеней стека: величину несёт длина волоска, а не
- *  цифра и не полоска прогресса. Ширина берётся из данных (`--reach`, 0..1),
- *  поэтому добавленный язык рисуется сам, без правки правил.
- * ======================================================================= */
-
-.langs__head {
-  padding-top: clamp(1.75rem, 4vh, 2.75rem);
-}
-
-.langs {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(1.25rem, 3vw, 2.5rem);
-  padding-block: clamp(1.1rem, 2.5vh, 1.6rem) clamp(1.75rem, 4vh, 2.75rem);
-  max-width: 62rem;
-}
-
-.langs__item {
-  align-content: start;
-}
-
-.langs__item::before {
-  content: '';
-  display: block;
-  width: calc(var(--reach, 1) * 7rem);
-  max-width: 100%;
-  height: 1px;
-  margin-bottom: 0.7rem;
-  background: var(--ink);
-}
-
-.langs__name {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.4rem 0.75rem;
-  font-size: clamp(1.125rem, 2.2vw, 1.5rem);
-  font-weight: 500;
-  letter-spacing: -0.02em;
-}
-
-/* Отметка стоит рядом с именем, а не под ним: моно-капс против крупного
- * начертания читается как другой регистр записи, а не как вторая строка. */
-.langs__level {
-  transform: translateY(-0.1em);
-}
-
-.langs__gloss {
-  margin-top: 0.4rem;
-  max-width: 34ch;
-  font-size: 0.8125rem;
-  line-height: 1.45;
-  color: var(--ink-2);
-}
-
-/* На узком экране два языка встают друг под друга: определение длиннее
- * половины телефонной ширины и в две колонки рвётся в столбик по слову. */
-@media (max-width: 620px) {
-  .langs {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 1.75rem;
-  }
-}
-
-/* ==========================================================================
- *  Связаться — подпись
- *
- *  Имя открывает лист во всю ширину; адрес его во всю ширину закрывает.
- *  Кегль приезжает из ContactSign: он измерен по строке, а не выведен из vw,
- *  поэтому адрес любой длины садится по ширине листа. Значение ниже — только
- *  основание, на котором блок стоит до того, как отработает скрипт.
- * ======================================================================= */
-
-.sign {
-  display: block;
-  padding-block: clamp(1.5rem, 4vh, 3rem) clamp(1.25rem, 3vh, 2.25rem);
-}
-
-.sign__value {
-  position: relative;
-  display: inline-block;
-  max-width: 100%;
-  font-size: clamp(1.5rem, 9vw, 8rem);
-  font-weight: 600;
-  line-height: 0.82;
-  letter-spacing: -0.045em;
-  white-space: nowrap;
-  transition: color 0.3s var(--ease);
-}
-
-/* Подчёркивание — то же, что у работ: волосок, выезжающий слева. Под словом
- * в двести пикселей он и должен остаться волоском; единица деления на этой
- * странице одна, и крупный кегль её не отменяет. */
-.sign__value::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -0.06em;
-  height: 1px;
-  background: var(--ink);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.5s var(--ease);
-}
-
-.sign:hover .sign__value::after,
-.sign:focus-visible .sign__value::after {
-  transform: scaleX(1);
-}
-
-/* Остальные каналы — зеркало строки состава под именем: тот же моно-капс,
- * тот же слэш-разделитель, та же логика переноса. */
-.sign__rest {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.6rem 0;
-  padding-block: clamp(0.9rem, 2.2vh, 1.4rem);
-}
-
-.sign__item {
-  white-space: nowrap;
-}
-
-.sign__handle {
-  transition: color 0.3s var(--ease);
-}
-
-.sign__sep {
-  color: var(--rule-strong);
-  padding-inline: 0.9rem;
-}
-
-/* Закон страницы: наведение гасит соседей, а не красит выбранное. */
-.contact:hover a:not(:hover) .sign__value,
-.contact:hover a:not(:hover) .label {
-  color: var(--ink-dim);
-}
-
-/* ==========================================================================
- *  Палец вместо курсора
- *
- *  Запрос по указателю, а не по ширине: ноутбук с сенсорным экраном
- *  сообщает `fine` и правил ниже не получает, а планшет в 1024px —
- *  получает. Ни одно правило в этом блоке не может задеть мышь.
- *
- *  Приём везде один: площадь нажатия растёт, а нарисованное не двигается.
- *  Ссылки в планке растягиваются на её собственные 52px, остальные
- *  добирают площадь псевдоэлементом поверх, который в потоке не участвует.
- * ======================================================================= */
-
-@media (pointer: coarse) {
-  /* Планка уже 52px высотой — ссылке достаточно её занять целиком.
-   * Текст остаётся отцентрованным, поэтому вид не меняется. */
-  .bar__inner > a,
-  .bar__nav > a,
-  .lang,
-  .lang__opt {
-    align-self: stretch;
-    display: inline-flex;
-    align-items: center;
-  }
-
-  /* Сама обёртка языка тоже флекс-элемент: без её растяжения кнопкам внутри
-   * не во что растягиваться, и высота осталась бы прежними 18px. */
-  .lang {
-    align-items: stretch;
-  }
-
-  /* Два языка стоят вплотную: сначала разводим их, потом расширяем, иначе
-   * области нажатия наложились бы и попадание стало бы лотереей. */
-  .lang {
-    gap: 0.75rem;
-  }
-
-  .lang__opt {
-    padding-inline: 0.45rem;
-    margin-inline: -0.45rem;
-  }
-
-  /* Ссылка-действие: 21px по высоте — мимо неё промахиваются. Псевдоэлемент
-   * добирает до 45px, ничего не сдвигая; ::after здесь занят подчёркиванием. */
-  .act::before,
-  .work__link::before,
-  .sign__rest a::before,
-  .spread__next::before {
-    content: '';
-    position: absolute;
-    /* 22px строки + 13px сверху и снизу = 48px: с запасом над сорока
-     * четырьмя, потому что палец промахивается не только по вертикали. */
-    inset: -13px -10px;
-  }
-
-  .work__link,
-  .sign__rest a {
-    position: relative;
-  }
-}
-
-/* Вырез и скруглённые углы: в альбомной ориентации содержимое иначе уезжает
- * под камеру. На экране без выреза env() равен нулю, поэтому max() возвращает
- * обычный отступ и раскладка не меняется нигде, кроме телефона с вырезом. */
-.sheet,
-.bar__inner {
-  padding-left: max(var(--gutter), env(safe-area-inset-left));
-  padding-right: max(var(--gutter), env(safe-area-inset-right));
-}
-
-/* ==========================================================================
- *  Подвал
- * ======================================================================= */
-
-.foot {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem 2rem;
-  justify-content: space-between;
-  padding-block: 2rem clamp(2rem, 5vh, 4rem);
-}
-
-/* ==========================================================================
- *  Страница работы
- * ======================================================================= */
-
-.spread__head {
-  padding-top: calc(var(--bar) + clamp(2.5rem, 8vh, 6rem));
-  padding-bottom: clamp(1.5rem, 4vh, 3rem);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px
 }
 
 .spread__name {
-  font-size: clamp(3.5rem, 15vw, 13rem);
-  font-weight: 600;
-  line-height: 0.82;
-  letter-spacing: -0.045em;
+  font:400 clamp(54px,7vw,88px)/1.2 var(--serif);
+  letter-spacing:-.05em;
+  margin:25px 0
 }
 
 .spread__lede {
-  margin-top: clamp(1.5rem, 4vh, 2.5rem);
-  font-size: clamp(1.125rem, 1.9vw, 1.625rem);
-  line-height: 1.4;
-  letter-spacing: -0.015em;
-  max-width: 42ch;
+  font-size:17px;
+  line-height:1.85;
+  color:var(--ink-dim);
+  max-width:800px
+}
+
+.triad {
+  display:grid;
+  grid-template-columns:1fr 1.5fr 2fr 1fr;
+  gap:24px;
+  padding:25px 0
+}
+
+.triad__value {
+  font-size:12px;
+  color:var(--ink);
+  margin-top:9px;
+  line-height:1.8
+}
+
+.page>.rule,.page>section>.rule {
+  max-width:calc(var(--sheet) - var(--gutter)*2);
+  margin-inline:auto
 }
 
 .block {
-  display: grid;
-  grid-template-columns: 3fr 9fr;
-  gap: clamp(1.5rem, 4vw, 4rem);
-  padding-block: clamp(2.5rem, 6vh, 4.5rem);
-  align-items: start;
+  display:grid;
+  grid-template-columns:1fr 3fr;
+  gap:56px;
+  padding:55px 0
 }
 
-@media (max-width: 860px) {
-  .block {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-}
-
-.block__side {
-  position: sticky;
-  top: calc(var(--bar) + 1.5rem);
+.block>* {
+  min-width:0
 }
 
 .block__heading {
-  font-size: 1.0625rem;
-  font-weight: 500;
-  letter-spacing: -0.01em;
+  font:italic 23px/1.4 var(--serif);
+  letter-spacing:-.025em;
+  max-width:240px;
+  color:var(--accent);
+  overflow-wrap:break-word
 }
 
 .block__note {
-  margin-top: 0.85rem;
-  max-width: 22ch;
-}
-
-@media (max-width: 860px) {
-  .block__side {
-    position: static;
-  }
+  margin-top:18px
 }
 
 .points__item {
-  padding-block: clamp(1rem, 2.5vh, 1.5rem);
+  padding:26px 0
 }
 
-.points__term {
-  font-size: clamp(1.125rem, 1.8vw, 1.5rem);
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  max-width: 30ch;
+.points__item h3 {
+  font:400 25px/1.4 var(--serif);
+  letter-spacing:-.02em;
+  margin-bottom:15px;
+  max-width:700px
 }
 
 .points__body {
-  margin-top: 0.75rem;
-  color: var(--ink-dim);
-  max-width: 64ch;
+  font-size:15px;
+  line-height:1.95;
+  color:var(--ink-dim);
+  max-width:75ch
 }
 
 .points__link {
-  margin-top: 1.25rem;
+  margin-top:18px
+}
+
+.block ul>li:first-child .points__item {
+  padding-top:0
 }
 
 .figures__row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 2rem;
-  padding-block: clamp(0.75rem, 2vh, 1.25rem);
+  display:grid;
+  grid-template-columns:1fr 2fr;
+  gap:25px;
+  align-items:center;
+  padding:20px 0
 }
 
 .figures__value {
-  font-size: clamp(2rem, 4.5vw, 3.5rem);
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: -0.04em;
-  font-variant-numeric: tabular-nums;
+  font:400 42px/1.2 var(--serif);
+  color:var(--accent);
+  letter-spacing:-.04em
 }
 
 .figures__label {
-  text-align: right;
-  max-width: 28ch;
-}
-
-@media (max-width: 620px) {
-  .figures__row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.4rem;
-  }
-
-  .figures__label {
-    text-align: left;
-  }
+  text-transform:none;
+  font-size:12px;
+  letter-spacing:0
 }
 
 .spread__next {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 2rem;
-  padding-block: clamp(2rem, 5vh, 3.5rem);
+  padding:55px 0
 }
 
 .spread__next-name {
-  font-size: clamp(2rem, 6vw, 4.5rem);
-  font-weight: 600;
-  letter-spacing: -0.04em;
-  position: relative;
-  display: inline-block;
+  display:block;
+  font:400 clamp(40px,6vw,66px)/1.3 var(--serif);
+  letter-spacing:-.04em;
+  margin-top:10px
 }
 
 .spread__next-name::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0.08em;
-  height: 2px;
-  background: var(--ink);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.55s var(--ease);
+  content:' ↗';
+  color:var(--accent);
+  font-size:.7em
 }
 
-a:hover .spread__next-name::after,
-a:focus-visible .spread__next-name::after {
-  transform: scaleX(1);
+.spread__next:hover {
+  color:var(--accent)
 }
-
-/* ==========================================================================
- *  Не найдено
- * ======================================================================= */
 
 .missing {
-  min-height: 70svh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 1.5rem;
-  align-items: flex-start;
+  padding:80px 0 120px
 }
 
 .missing__title {
-  font-size: clamp(2.5rem, 9vw, 7rem);
-  font-weight: 600;
-  line-height: 0.9;
-  letter-spacing: -0.04em;
+  font:100px var(--serif);
+  color:var(--accent)
 }
 
-/* ==========================================================================
- *  Движение — один поставленный момент: лист расчерчивается.
- *  Значения по умолчанию видимые; анимация только добавляется сверху.
- * ======================================================================= */
+.missing .act {
+  margin-top:30px
+}
 
-@media (prefers-reduced-motion: no-preference) {
-  .draw {
-    animation: draw 1s var(--ease) backwards;
-    animation-delay: calc(var(--i, 0) * 60ms);
-    transform-origin: left;
-  }
+/* Interactive canvas; controls keep the existing ink and paper palette. */
+.schematic-wrap {
+  position:relative;
+  overflow:hidden;
+  padding:0;
+  background:#eae8dd;
+  border:1px solid var(--rule)
+}
 
-  .rise {
-    animation: rise 0.9s var(--ease) backwards;
-    animation-delay: calc(var(--i, 0) * 60ms + 90ms);
-  }
+.schematic {
+  width:100%;
+  min-height:300px;
+  height:auto;
+  overflow:hidden;
+  touch-action:none;
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
+  outline:none;
+  cursor:grab
+}
 
-  @keyframes draw {
-    from {
-      transform: scaleX(0);
-    }
-  }
+.schematic * {
+  -webkit-user-select:none;
+  user-select:none
+}
 
-  @keyframes rise {
-    from {
-      opacity: 0;
-      transform: translateY(12px);
-    }
+.schematic-wrap--dragging .schematic {
+  cursor:grabbing
+}
+
+.schematic:focus-visible {
+  outline:2px solid var(--accent);
+  outline-offset:-3px
+}
+
+.schematic__footer {
+  position:absolute;
+  left:12px;
+  right:12px;
+  bottom:12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:12px 20px;
+  pointer-events:none
+}
+
+.schematic__controls {
+  pointer-events:auto;
+  flex-shrink:0;
+  margin-left:auto;
+  display:flex;
+  border:1px solid var(--rule-strong);
+  background:var(--ground)
+}
+
+.schematic__controls button {
+  min-width:40px;
+  min-height:40px;
+  padding:0 10px;
+  font-size:20px;
+  line-height:1;
+  touch-action:manipulation
+}
+
+.schematic__controls button + button {
+  border-left:1px solid var(--rule)
+}
+
+.schematic__controls .schematic__reset {
+  min-width:64px;
+  font:11px var(--mono)
+}
+
+.schematic__controls button:hover:not(:disabled) {
+  color:var(--accent)
+}
+
+.schematic__controls button:disabled {
+  opacity:.35;
+  cursor:default
+}
+
+.schematic__box {
+  fill:var(--ground);
+  stroke:var(--rule-strong);
+  stroke-width:1;
+  vector-effect:non-scaling-stroke
+}
+
+.schematic__box--emphasis {
+  stroke:var(--accent)
+}
+
+.schematic text {
+  paint-order:stroke;
+  stroke:#eae8dd;
+  stroke-width:3px;
+  stroke-linejoin:round
+}
+
+.schematic__label {
+  font:7.5px var(--mono);
+  letter-spacing:.05em;
+  fill:var(--ink)
+}
+
+.schematic__note {
+  font:6.5px var(--mono);
+  letter-spacing:.03em;
+  fill:var(--ink-2)
+}
+
+.schematic__edge {
+  fill:none;
+  stroke:var(--rule-strong);
+  stroke-width:1;
+  vector-effect:non-scaling-stroke
+}
+
+.schematic__edge--async {
+  stroke-dasharray:4 4;
+  stroke:var(--accent)
+}
+
+.schematic__edge-label {
+  font:6.5px var(--mono);
+  fill:var(--ink-2)
+}
+
+.schematic__cap {
+  font-size:12px;
+  color:var(--ink-2);
+  line-height:1.8;
+  margin-top:18px;
+  max-width:75ch
+}
+
+.schematic__hint {
+  font-size:10px;
+  line-height:1.6;
+  color:var(--ink-2);
+  flex:1 1 240px
+}
+
+@media(min-width:1500px) {
+  :root {
+    --sheet:1400px
   }
 }
 
-/* Скрытая надпись для скринридеров — без визуального следа. */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-  border: 0;
+@media(max-width:1000px) {
+  :root {
+    --gutter:32px
+  }
+  .editorial-project {
+    grid-template-columns:.65fr 3fr 1fr;
+    gap:25px
+  }
+  .project__margin>strong {
+    font-size:40px
+  }
+  .editorial-section,.block {
+    gap:35px
+  }
+  .triad {
+    grid-template-columns:1fr 1fr
+  }
+  .editorial-contact {
+    gap:25px
+  }
+  .bar__nav {
+    gap:22px
+  }
+}
+
+@media(max-width:700px) {
+  :root {
+    --gutter:22px
+  }
+  .bar__inner {
+    padding:22px 0;
+    gap:15px
+  }
+  .bar__mark {
+    font-size:24px
+  }
+  .bar__nav {
+    gap:16px;
+    font-size:11px
+  }
+  .bar__about {
+    display:none
+  }
+  .bar__nav>.act {
+    font-size:11px
+  }
+  .lang {
+    gap:2px
+  }
+  .editorial-hero {
+    padding-top:35px;
+    padding-bottom:38px
+  }
+  .hero__kicker {
+    font-size:10px;
+    margin-bottom:28px
+  }
+  .editorial-hero h1 {
+    font-size:clamp(42px,8.8vw,62px);
+    letter-spacing:-.065em;
+    margin-bottom:28px
+  }
+  .hero__intro {
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    gap:18px;
+    align-items:center
+  }
+  .hero__star {
+    font-size:48px
+  }
+  .hero__intro p {
+    font-size:12px
+  }
+  .hero__intro>.act {
+    grid-column:1;
+    justify-self:start;
+    margin:0;
+    font-size:11px
+  }
+  .desktop-break {
+    display:none
+  }
+  .editorial-project {
+    grid-template-columns:minmax(0,1fr);
+    gap:18px;
+    padding:30px 0
+  }
+  .project__number {
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:16px;
+    font-size:11px
+  }
+  .project__number p {
+    margin:0;
+    max-width:none;
+    font-size:10px;
+    line-height:1.7;
+    overflow-wrap:normal
+  }
+  .project__main h3 {
+    font-size:38px;
+    margin:9px 0 12px
+  }
+  .project__description {
+    font-size:13px;
+    line-height:1.85
+  }
+  .project__margin {
+    grid-column:1;
+    text-align:left;
+    display:flex;
+    gap:15px;
+    align-items:center;
+    margin-top:10px
+  }
+  .project__margin>strong {
+    font-size:38px;
+    flex-shrink:0
+  }
+  .project__margin>span {
+    margin-top:0;
+    font-size:9px;
+    max-width:150px
+  }
+  .project__margin>p {
+    font-size:11px;
+    margin:0;
+    max-width:220px
+  }
+  .tags {
+    gap:5px;
+    margin-top:15px
+  }
+  .tags li {
+    font-size:9px;
+    padding:4px 6px
+  }
+  .project__links {
+    gap:16px;
+    margin-top:18px
+  }
+  .project__links .act {
+    font-size:11px
+  }
+  .editorial-section {
+    grid-template-columns:1fr;
+    gap:25px;
+    padding-top:35px;
+    padding-bottom:40px
+  }
+  .section__side {
+    display:flex;
+    justify-content:space-between;
+    align-items:start;
+    gap:20px
+  }
+  .section__side>p {
+    font-size:10px;
+    text-align:right;
+    margin:0;
+    max-width:160px
+  }
+  .editorial-section h2 {
+    font-size:30px;
+    margin-bottom:22px
+  }
+  .prose p,.points__body {
+    font-size:14px;
+    line-height:1.9
+  }
+  .languages>div {
+    grid-template-columns:1fr 1.7fr
+  }
+  .stack-group li {
+    grid-template-columns:1fr 1.5fr;
+    font-size:11px;
+    gap:12px
+  }
+  .editorial-contact {
+    padding-top:40px;
+    padding-bottom:35px;
+    display:block
+  }
+  .editorial-contact h2 {
+    font-size:clamp(28px,6.9vw,42px)
+  }
+  .editorial-contact>p {
+    text-align:left;
+    margin-top:30px;
+    max-width:none;
+    font-size:10px
+  }
+  .contact__links {
+    gap:15px
+  }
+  .contact__primary {
+    font-size:14px;
+    width:100%
+  }
+  .foot {
+    padding:20px 0
+  }
+  .foot .label {
+    font-size:9px
+  }
+  .spread__head {
+    padding:30px 0
+  }
+  .spread__name {
+    font-size:52px;
+    margin:22px 0
+  }
+  .spread__lede {
+    font-size:14px;
+    line-height:1.85
+  }
+  .triad {
+    gap:20px;
+    padding:22px 0
+  }
+  .triad__value {
+    font-size:11px
+  }
+  .block {
+    grid-template-columns:1fr;
+    gap:26px;
+    padding:35px 0
+  }
+  .block__heading {
+    max-width:none;
+    font-size:24px
+  }
+  .points__item h3 {
+    font-size:23px
+  }
+  .points__item {
+    padding:22px 0
+  }
+  .figures__value {
+    font-size:36px
+  }
+  .figures__row {
+    gap:18px
+  }
+  .figures__label {
+    font-size:11px
+  }
+  .schematic-wrap {
+    padding:0
+  }
+  .schematic__hint {
+    display:block;
+    font-size:9px
+  }
+  .spread__next {
+    padding:35px 0
+  }
+  .spread__next-name {
+    font-size:40px
+  }
+}
+
+@media(max-width:370px) {
+  .bar__nav {
+    gap:9px
+  }
+  .bar__section {
+    display:none
+  }
+  .editorial-hero h1 {
+    font-size:38px
+  }
+  .hero__intro p {
+    font-size:11px
+  }
+  .hero__intro>.act {
+    margin-left:0
+  }
+  .project__main h3 {
+    font-size:34px
+  }
+  .editorial-project {
+    grid-template-columns:minmax(0,1fr)
+  }
+  .contact__primary {
+    font-size:12px
+  }
+}
+
+@media(prefers-reduced-motion:reduce) {
+  html {
+    scroll-behavior:auto
+  }
+  *,*::before,*::after {
+    animation:none!important;
+    transition:none!important
+  }
 }

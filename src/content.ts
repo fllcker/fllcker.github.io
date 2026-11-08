@@ -116,11 +116,11 @@ export const identity = {
 export const intro: L<string[]> = {
   ru: [
     'Пишу серверную часть на Go: подписки, доставка видео, деньги и всё, что должно продолжать работать в три часа ночи.',
-    'Работ здесь две, и это честное число. Обе я вёл от пустого репозитория до продакшена и в обеих отвечал за бэкенд и инфраструктуру один — поэтому про каждую есть что рассказать глубже одной строчки.',
+    'Здесь два собственных коммерческих проекта и работа в WexWave. В собственных проектах отвечал за бэкенд и инфраструктуру от пустого репозитория до продакшена. В WexWave присоединился к команде и занимаюсь событиями, наблюдаемостью и пайплайном перевода видео.',
   ],
   en: [
     'I write server-side Go: subscriptions, video delivery, money, and everything that has to keep working at three in the morning.',
-    'There are two projects here, and that is the honest number. I took both from an empty repository to production and was the only person answering for backend and infrastructure in each — which is why every one of them has more to say than a single line.',
+    'These are two commercial projects of my own and my work at WexWave. For my own projects, I took responsibility for backend and infrastructure from an empty repository to production. At WexWave, I joined an existing team and work on events, observability and the video translation pipeline.',
   ],
 };
 
@@ -671,24 +671,34 @@ export const stack: StackEntry[] = [
     note: { ru: 'фронт, TLS, лимиты', en: 'edge, TLS, limits' },
   },
   {
-    name: 'NestJS',
+    name: 'Temporal',
     tier: 'applied',
-    note: { ru: 'половина сервисов AniType', en: 'half of the AniType services' },
+    note: { ru: 'оркестрация многошагового видеопайплайна', en: 'orchestrating a multi-step video pipeline' },
   },
   {
-    name: 'Xray',
+    name: 'OpenTelemetry API',
     tier: 'applied',
-    note: { ru: 'выдача доступа по API', en: 'granting access over its API' },
+    note: { ru: 'инструментация сервисов: трассировка и метрики', en: 'service instrumentation: tracing and metrics' },
+  },
+  {
+    name: 'Xray-core',
+    tier: 'applied',
+    note: { ru: 'настройка и эксплуатация ядра коммерческого VPN', en: 'configuring and operating a commercial VPN core' },
   },
   {
     name: 'Kubernetes',
     tier: 'applied',
-    note: { ru: 'реплики важных сервисов', en: 'replicas of the hot services' },
+    note: { ru: 'развёртывание и масштабирование сервисов', en: 'deploying and scaling services' },
   },
   {
     name: 'Elasticsearch',
     tier: 'applied',
     note: { ru: 'поиск по каталогу', en: 'catalogue search' },
+  },
+  {
+    name: 'NestJS',
+    tier: 'applied',
+    note: { ru: 'половина сервисов AniType', en: 'half of the AniType services' },
   },
 ];
 
@@ -774,7 +784,7 @@ export const ui = {
   role: { ru: 'Роль', en: 'Role' },
   period: { ru: 'Период', en: 'Period' },
   readMore: { ru: 'Смотреть работу', en: 'View work' },
-  backToIndex: { ru: 'В индекс', en: 'Back to index' },
+  backToIndex: { ru: 'К работам', en: 'Back to work' },
   /* Появляется только там, где схема шире экрана и уезжает под край. */
   scrollSchematic: { ru: 'Схема прокручивается', en: 'The diagram scrolls' },
   nextWork: { ru: 'Следующая работа', en: 'Next work' },
