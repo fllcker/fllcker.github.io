@@ -62,8 +62,16 @@ export type Block =
   | { kind: 'figures'; heading: L; items: { value: string; label: L }[] }
   | { kind: 'schematic'; heading: L; schematic: Schematic; caption: L };
 
+export type ProjectType = 'own-commercial' | 'employment';
+
+export const projectTypeLabels: Record<ProjectType, L> = {
+  'own-commercial': { ru: 'Свой коммерческий проект', en: 'Own commercial project' },
+  employment: { ru: 'Работа', en: 'Employment' },
+};
+
 export type Project = {
   slug: string;
+  type: ProjectType;
   /** Номер в коллекции. Это идентификатор работы, а не декоративная нумерация. */
   code: string;
   name: string;
@@ -123,6 +131,7 @@ export const intro: L<string[]> = {
 export const projects: Project[] = [
   {
     slug: 'anitype',
+    type: 'own-commercial',
     code: '01',
     name: 'AniType',
     period: '2023—2026',
@@ -323,6 +332,7 @@ export const projects: Project[] = [
   },
   {
     slug: 'magix-vpn',
+    type: 'own-commercial',
     code: '02',
     name: 'Magix VPN',
     period: '2026 — настоящее время',
@@ -504,6 +514,70 @@ export const projects: Project[] = [
             'The mechanics are described above: subnets instead of addresses, an activity window, strikes in a sliding window, configurable thresholds, and a deliberate refusal to punish while Redis is unreachable. Both faults of the first version are covered by the same machinery: an address change inside a carrier pool collapses into a single subnet, and an old address still hanging in the online list fails the activity window and does not count. This version arrived together with tests for exactly that scenario — some four hundred lines checking that an honest device on a rotating address is not treated as an offender.',
           ],
         },
+      },
+    ],
+  },
+  {
+    slug: 'wexwave',
+    type: 'employment',
+    code: '03',
+    name: 'WexWave',
+    period: '2026 — настоящее время',
+    role: {
+      ru: 'Бэкенд-разработчик, второй в команде',
+      en: 'Backend developer, the second on the team',
+    },
+    stack: ['Go', 'PostgreSQL', 'Redis', 'Docker', 'Kafka', 'Temporal', 'OpenTelemetry'],
+    summary: {
+      ru: 'Перевод голоса в видео в реальном времени',
+      en: 'Real-time voice translation in video',
+    },
+    lede: {
+      ru: 'Сервис перевода голоса в видео в реальном времени. Присоединился вторым бэкенд-разработчиком: внедрил Kafka для событий, связанных с деньгами и балансом, добавил трассировку и метрики через OpenTelemetry. Для новой функции перевода загруженных видео выбрал оркестрацию многошагового пайплайна на Temporal.',
+      en: 'A service for real-time voice translation in video. I joined as the second backend developer, introduced Kafka for events involving money and balances, and added tracing and metrics through OpenTelemetry. For the new uploaded-video translation feature, I chose Temporal to orchestrate the multi-step pipeline.',
+    },
+    links: [{ label: 'wexwave.com', href: 'https://wexwave.com/' }],
+    blocks: [
+      {
+        kind: 'prose',
+        heading: { ru: 'Задача', en: 'The problem' },
+        body: {
+          ru: [
+            'В WexWave уже работал перевод голоса в видео в реальном времени. Я присоединился к существующей команде вторым бэкенд-разработчиком. Базовый стек — Go, PostgreSQL, Redis и Docker. Kafka, Temporal и OpenTelemetry принёс в проект я.',
+            'Моя работа охватывает три направления: перевод взаимодействий, которым нужна асинхронность, с HTTP на события, наблюдаемость сервисов и новую функцию перевода загруженных видео. Последняя отличается от перевода в реальном времени: пользователь загружает файл, а сервис проводит его через многошаговый пайплайн обработки.',
+          ],
+          en: [
+            'WexWave already provided real-time voice translation in video when I joined the existing team as its second backend developer. The base stack is Go, PostgreSQL, Redis and Docker. I introduced Kafka, Temporal and OpenTelemetry.',
+            'My work covers three areas: moving interactions that need asynchronous communication from HTTP to events, service observability, and a new feature for translating uploaded videos. The latter differs from real-time translation: the user uploads a file, and the service takes it through a multi-step processing pipeline.',
+          ],
+        },
+      },
+      {
+        kind: 'points',
+        heading: { ru: 'Что уже сделал', en: 'Work so far' },
+        items: [
+          {
+            term: { ru: 'Kafka для денежной цепочки', en: 'Kafka for the financial flow' },
+            body: {
+              ru: 'До моего прихода всё взаимодействие между микросервисами шло по HTTP. Я внедрил Kafka и перевёл на события критичную цепочку, связанную с деньгами и балансом. Миграция остальных взаимодействий, которым нужна асинхронность, ещё продолжается.',
+              en: 'Before I joined, all inter-service communication used HTTP. I introduced Kafka and moved the critical flow involving money and balances to events. Migration of the remaining interactions that need asynchronous communication is still ongoing.',
+            },
+          },
+          {
+            term: { ru: 'Трассировка и метрики через OpenTelemetry', en: 'Tracing and metrics with OpenTelemetry' },
+            body: {
+              ru: 'В проекте уже были Grafana, Promtail и Loki. Я добавил инструментацию через OpenTelemetry API в код: трассировку HTTP, PostgreSQL и Redis, а также метрики. В рамках этой работы заменяем Promtail на Alloy; трассировка Temporal — следующий шаг по мере развития нового пайплайна.',
+              en: 'The project already had Grafana, Promtail and Loki. I instrumented the code through the OpenTelemetry API, adding HTTP, PostgreSQL and Redis tracing as well as metrics. As part of this work, we are replacing Promtail with Alloy; Temporal tracing is the next step as the new pipeline develops.',
+            },
+          },
+          {
+            term: { ru: 'Оффлайн-перевод видео и зачем понадобилась оркестрация на Temporal', en: 'Offline video translation and why Temporal orchestration was needed' },
+            body: {
+              ru: 'Мне поручили добавить оффлайн-перевод: пользователь загружает видео и получает версию с переведённым голосом. Обработка состоит из десятка последовательных шагов и не укладывается в один запрос–ответ. Для управления этим пайплайном я выбрал Temporal: порядок выполнения шагов описывается как workflow, а сама обработка — как отдельные activities.',
+              en: 'I was tasked with adding offline translation: a user uploads a video and receives a version with translated speech. Processing involves around ten sequential steps rather than a single request and response. I chose Temporal to manage this pipeline, with the sequence defined as a workflow and processing steps as separate activities.',
+            },
+          },
+        ],
       },
     ],
   },
